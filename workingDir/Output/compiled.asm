@@ -29,6 +29,11 @@ SZ
                      LD         R0,DATA_STACK_ADDRESS
                      JSR        PUSH_R0
                      JSR        NEXT
+FILELOC
+                     LD         R0,_FILELOC
+                     JSR        PUSH_R0
+                     JSR        NEXT
+_FILELOC             .FILL      x4000
 DROP
                      ADD        R4,R4,#-1
                      JSR        NEXT
@@ -97,6 +102,26 @@ SUBTRACT
                      ADD        R0,R0,#1
                      LDR        R1,R4,#0
                      ADD        R0,R0,R1
+                     STR        R0,R4,#0
+                     JSR        NEXT
+ANDF
+                     JSR        POP_R0
+                     LDR        R1,R4,#0
+                     AND        R0,R0,R1
+                     STR        R0,R4,#0
+                     JSR        NEXT
+OR
+                     JSR        POP_R0
+                     LDR        R1,R4,#0
+                     NOT        R0,R0
+                     NOT        R1,R1
+                     AND        R0,R0,R1
+                     NOT        R0,R0
+                     STR        R0,R4,#0
+                     JSR        NEXT
+NOTF
+                     LDR        R0,R4,#0
+                     NOT        R0,R0
                      STR        R0,R4,#0
                      JSR        NEXT
 EQUAL
@@ -229,26 +254,89 @@ ZGTE
 ZGTE_false           AND        R0,R0,#0
 ZGTE_finish          JSR        PUSH_R0
                      JSR        NEXT
-ANDF
-                     JSR        POP_R0
-                     LDR        R1,R4,#0
-                     AND        R0,R0,R1
-                     STR        R0,R4,#0
+DIVMOD
+                     JSR        POP_R2
+                     JSR        POP_R1
+                     JSR        _DIVIDE
+                     JSR        PUSH_R1
+                     JSR        PUSH_R0
                      JSR        NEXT
-OR
-                     JSR        POP_R0
-                     LDR        R1,R4,#0
+
+_DIVIDE              ST         R7,DIV_R7
+
+                     AND        R2,R2,R2
+                     BRz        DIV_ZERO_ERROR
+                     AND        R1,R1,R1
+                     BRz        DIV_ZERO_RETURN
+
+                     JSR        SIGN_LOGIC
+
+                     ST         R3,DIV_SIGN
+
+                     NOT        R3,R2
+                     ADD        R3,R3,#1
+
+                     AND        R0,R0,#0
+
+DIV_LOOP             ADD        R0,R0,#1
+                     ADD        R1,R1,R3
+                     BRp        DIV_LOOP
+
+                     BRz        DIV_EVEN
+                     ADD        R0,R0,#-1
+                     ADD        R1,R1,R2
+                     BRnzp      DIV_RETURN
+
+DIV_EVEN             AND        R1,R1,#0
+
+DIV_RETURN           LD         R3,DIV_SIGN
+                     BRzp       DIV_CLEANUP
                      NOT        R0,R0
+                     ADD        R0,R0,#1
+
+DIV_CLEANUP          LD         R7,DIV_R7
+                     RET        
+
+DIV_ZERO_RETURN      AND        R0,R0,#0
+                     AND        R1,R1,#0
+                     BRnzp      DIV_CLEANUP
+
+DIV_ZERO_ERROR       LEA        R0,DIV_ZERO_ERR_MSG
+                     PUTS       
+                     HALT       
+DIV_ZERO_ERR_MSG     .STRINGZ   "\nATTEMPTED TO DIVIDE BY ZERO\n"
+
+DIV_R0               .BLKW      1
+DIV_R1               .BLKW      1
+DIV_R2               .BLKW      1
+DIV_R7               .BLKW      1
+DIV_SIGN             .BLKW      1
+
+SIGN_LOGIC           ST         R7,SIGN_CALLBACK
+
+                     AND        R3,R3,#0
+                     ADD        R3,R3,#1
+
+SIGN_TEST_R1         AND        R1,R1,R1
+                     BRzp       SIGN_TEST_R2
+                     JSR        SIGN_FLIP
                      NOT        R1,R1
-                     AND        R0,R0,R1
-                     NOT        R0,R0
-                     STR        R0,R4,#0
-                     JSR        NEXT
-NOTF
-                     LDR        R0,R4,#0
-                     NOT        R0,R0
-                     STR        R0,R4,#0
-                     JSR        NEXT
+                     ADD        R1,R1,#1
+
+SIGN_TEST_R2         AND        R2,R2,R2
+                     BRzp       SIGN_CLEANUP
+                     JSR        SIGN_FLIP
+                     NOT        R2,R2
+                     ADD        R2,R2,#1
+
+SIGN_CLEANUP         LD         R7,SIGN_CALLBACK
+                     RET        
+
+SIGN_FLIP            NOT        R3,R3
+                     ADD        R3,R3,#1
+                     RET        
+
+SIGN_CALLBACK        .BLKW      1
 STORE
                      JSR        POP_R0
                      JSR        POP_R1
@@ -305,11 +393,54 @@ KEY
                      JSR        NEXT
 
 _KEY                 ST         R7,KEY_CB
-                     GETC       
+
+                     LD         R1,var_KEYSOURCE
+                     BRz        KEY_board
+
+
+                     LDR        R0,R1,#0
+                     BRz        KEY_eof
+
                      OUT        
-                     LD         R7,KEY_CB
+
+                     ADD        R1,R1,#1
+                     ST         R1,var_KEYSOURCE
+                     BRnzp      KEY_cleanup
+
+KEY_eof              AND        R1,R1,#0
+                     ST         R1,var_KEYSOURCE
+                     LD         R0,key_NL
+                     BRnzp      KEY_cleanup
+
+
+KEY_board            GETC       
+
+                     LD         R1,key_NL
+                     ADD        R1,R1,R0
+                     BRz        KEY_out
+
+                     LD         R1,key_TAB
+                     ADD        R1,R1,R0
+                     BRz        KEY_out
+
+                     LD         R1,key_PRINTABLE
+                     ADD        R1,R1,R0
+                     BRn        KEY_cleanup
+
+KEY_out              OUT        
+
+KEY_cleanup          LD         R7,KEY_CB
                      RET        
+
 KEY_CB               .BLKW      1
+key_TAB              .FILL      #-9
+key_NL               .FILL      #-10
+key_PRINTABLE        .FILL      #-32
+KEYSOURCE
+                     LEA        R0,var_KEYSOURCE
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_KEYSOURCE        .FILL      #0
 EMIT
                      JSR        POP_R0
                      OUT        
@@ -350,6 +481,14 @@ LIT
                      ADD        R6,R6,#1
                      JSR        PUSH_R0
                      JSR        NEXT
+LITSTRING
+                     LDR        R0,R6,#0
+                     ADD        R6,R6,#1
+                     AND        R1,R6,R6
+                     ADD        R6,R6,R0
+                     JSR        PUSH_R1
+                     JSR        PUSH_R0
+                     JSR        NEXT
 WORD
                      JSR        _WORD
                      JSR        PUSH_R2
@@ -360,8 +499,6 @@ _WORD                ST         R7,WORD_CB
 
 _WORD_start          JSR        _KEY
                      LD         R1,c_BACKSLASH
-                     NOT        R1,R1
-                     ADD        R1,R1,#1
                      ADD        R2,R1,R0
                      BRz        _WORD_skip_comments
 
@@ -393,35 +530,48 @@ _WORD_cleanup        LD         R2,WORD_buffbot
 
 _WORD_skip_comments  JSR        _KEY
                      LD         R1,c_NEW_LINE
-                     NOT        R1,R1
-                     ADD        R1,R1,#1
                      ADD        R2,R1,R0
                      BRnp       _WORD_skip_comments
                      BRzp       _WORD_start
 
 _WORD_check_white    LD         R1,c_TAB
-                     NOT        R1,R1
-                     ADD        R1,R1,#1
                      ADD        R2,R1,R0
                      BRz        _WORD_check_white_l
+
                      LD         R1,c_SPACE
-                     NOT        R1,R1
-                     ADD        R1,R1,#1
                      ADD        R2,R1,R0
                      BRz        _WORD_check_white_l
+
                      LD         R1,c_NEW_LINE
-                     NOT        R1,R1
-                     ADD        R1,R1,#1
                      ADD        R2,R1,R0
                      BRz        _WORD_check_white_l
+
+                     LD         R1,c_ESC
+                     ADD        R2,R1,R0
+                     BRz        _WORD_restart
+
+                     LD         R1,c_BACKSPACE
+                     ADD        R2,R1,R0
+                     BRz        _WORD_restart
 
                      RET        
 _WORD_check_white_l  JMP        R3
 
-c_BACKSLASH          .FILL      #92
-c_TAB                .FILL      #9
-c_NEW_LINE           .FILL      #10
-c_SPACE              .FILL      #32
+_WORD_restart        LD         R0,char_BLOCK
+                     OUT        
+                     LD         R0,c_SPACE
+                     NOT        R0,R0
+                     ADD        R0,R0,#1
+                     OUT        
+                     BRnzp      _WORD_start
+
+c_BACKSLASH          .FILL      #-92
+c_TAB                .FILL      #-9
+c_NEW_LINE           .FILL      #-10
+c_SPACE              .FILL      #-32
+c_BACKSPACE          .FILL      #-8
+c_ESC                .FILL      #-27
+char_BLOCK           .FILL      #149
 
 WORD_CB              .BLKW      1
 WORD_buffptr         .FILL      WORD_BUFFER
@@ -479,6 +629,10 @@ _NUMBER_process      LD         R3,CHAR_zero
                      BRn        _NUMBER_cleanup
                      ADD        R2,R3,#-10
                      BRn        _NUMBER_save
+                     LD         R2,CHAR_subA
+                     ADD        R3,R3,R2
+                     BRn        _NUMBER_cleanup
+                     ADD        R3,R3,#10
 
 _NUMBER_save         LD         R2,var_BASE
                      NOT        R2,R2
@@ -510,7 +664,7 @@ NUMBER_sign          .FILL      #0
 NUMBER_length        .BLKW      1
 CHAR_zero            .FILL      #48
 CHAR_neg_sign        .FILL      #45
-CHAR_subA            .FILL      #17
+CHAR_subA            .FILL      #-17
 FIND
                      JSR        POP_R0
                      JSR        POP_R1
@@ -594,27 +748,12 @@ PARSE_ERROR
                      LEA        R0,const_PARSE_ERROR
                      JSR        PUSH_R0
                      JSR        NEXT
-const_PARSE_ERROR    .STRINGZ   "\nPARSE ERROR\n"
+const_PARSE_ERROR    .STRINGZ   "\nUNKNOWN WORD\n"
 EXECUTE
                      JSR        POP_R3
                      LDR        R2,R3,#0
                      JMP        R2
 EXECUTE_target       .BLKW      1
-STATE
-                     LEA        R0,var_STATE
-                     JSR        PUSH_R0
-                     JSR        NEXT
-var_STATE            .BLKW      1
-BASE
-                     LEA        R0,var_BASE
-                     JSR        PUSH_R0
-                     JSR        NEXT
-var_BASE             .FILL      #10
-HERE
-                     LEA        R0,var_HERE
-                     JSR        PUSH_R0
-                     JSR        NEXT
-var_HERE             .FILL      USER_DATA
 _F_IMMED
                      LD         R0,F_IMMED
                      JSR        PUSH_R0
@@ -687,6 +826,21 @@ ZBRANCH
                      BRz        BRANCH
                      ADD        R6,R6,#1
                      JSR        NEXT
+STATE
+                     LEA        R0,var_STATE
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_STATE            .BLKW      1
+BASE
+                     LEA        R0,var_BASE
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_BASE             .FILL      #10
+HERE
+                     LEA        R0,var_HERE
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_HERE             .FILL      USER_DATA
 LATEST
                      LEA        R0,var_LATEST
                      JSR        PUSH_R0
@@ -820,7 +974,11 @@ name_SZ              .FILL      name__DOCOL
                      .FILL      #2
                      .STRINGZ   "S0"
 code_SZ              .FILL      SZ
-name_DROP            .FILL      name_SZ
+name_FILELOC         .FILL      name_SZ
+                     .FILL      #7
+                     .STRINGZ   "FILELOC"
+code_FILELOC         .FILL      FILELOC
+name_DROP            .FILL      name_FILELOC
                      .FILL      #4
                      .STRINGZ   "DROP"
 code_DROP            .FILL      DROP
@@ -872,7 +1030,51 @@ name_SUBTRACT        .FILL      name_ADDF
                      .FILL      #1
                      .STRINGZ   "-"
 code_SUBTRACT        .FILL      SUBTRACT
-name_EQUAL           .FILL      name_SUBTRACT
+name_ANDF            .FILL      name_SUBTRACT
+                     .FILL      #3
+                     .STRINGZ   "AND"
+code_ANDF            .FILL      ANDF
+name_OR              .FILL      name_ANDF
+                     .FILL      #2
+                     .STRINGZ   "OR"
+code_OR              .FILL      OR
+name_NOTF            .FILL      name_OR
+                     .FILL      #4
+                     .STRINGZ   "NOTB"
+code_NOTF            .FILL      NOTF
+name_NOR             .FILL      name_NOTF
+                     .FILL      #3
+                     .STRINGZ   "NOR"
+code_NOR             .FILL      DOCOL
+                     .FILL      code_OR
+                     .FILL      code_NOTF
+                     .FILL      code_EXIT
+name_NAND            .FILL      name_NOR
+                     .FILL      #4
+                     .STRINGZ   "NAND"
+code_NAND            .FILL      DOCOL
+                     .FILL      code_ANDF
+                     .FILL      code_NOTF
+                     .FILL      code_EXIT
+name_XOR             .FILL      name_NAND
+                     .FILL      #3
+                     .STRINGZ   "XOR"
+code_XOR             .FILL      DOCOL
+                     .FILL      code_OVER
+                     .FILL      code_OVER
+                     .FILL      code_OR
+                     .FILL      code_NROT
+                     .FILL      code_NAND
+                     .FILL      code_ANDF
+                     .FILL      code_EXIT
+name_XNOR            .FILL      name_XOR
+                     .FILL      #4
+                     .STRINGZ   "XNOR"
+code_XNOR            .FILL      DOCOL
+                     .FILL      code_XOR
+                     .FILL      code_NOTF
+                     .FILL      code_EXIT
+name_EQUAL           .FILL      name_XNOR
                      .FILL      #1
                      .STRINGZ   "="
 code_EQUAL           .FILL      EQUAL
@@ -920,51 +1122,11 @@ name_ZGTE            .FILL      name_ZLTE
                      .FILL      #3
                      .STRINGZ   "0>="
 code_ZGTE            .FILL      ZGTE
-name_ANDF            .FILL      name_ZGTE
-                     .FILL      #3
-                     .STRINGZ   "AND"
-code_ANDF            .FILL      ANDF
-name_OR              .FILL      name_ANDF
-                     .FILL      #2
-                     .STRINGZ   "OR"
-code_OR              .FILL      OR
-name_NOTF            .FILL      name_OR
-                     .FILL      #3
-                     .STRINGZ   "NOT"
-code_NOTF            .FILL      NOTF
-name_NOR             .FILL      name_NOTF
-                     .FILL      #3
-                     .STRINGZ   "NOR"
-code_NOR             .FILL      DOCOL
-                     .FILL      code_OR
-                     .FILL      code_NOTF
-                     .FILL      code_EXIT
-name_NAND            .FILL      name_NOR
+name_DIVMOD          .FILL      name_ZGTE
                      .FILL      #4
-                     .STRINGZ   "NAND"
-code_NAND            .FILL      DOCOL
-                     .FILL      code_ANDF
-                     .FILL      code_NOTF
-                     .FILL      code_EXIT
-name_XOR             .FILL      name_NAND
-                     .FILL      #3
-                     .STRINGZ   "XOR"
-code_XOR             .FILL      DOCOL
-                     .FILL      code_OVER
-                     .FILL      code_OVER
-                     .FILL      code_OR
-                     .FILL      code_NROT
-                     .FILL      code_NAND
-                     .FILL      code_ANDF
-                     .FILL      code_EXIT
-name_XNOR            .FILL      name_XOR
-                     .FILL      #4
-                     .STRINGZ   "XNOR"
-code_XNOR            .FILL      DOCOL
-                     .FILL      code_XOR
-                     .FILL      code_NOTF
-                     .FILL      code_EXIT
-name_STORE           .FILL      name_XNOR
+                     .STRINGZ   "/MOD"
+code_DIVMOD          .FILL      DIVMOD
+name_STORE           .FILL      name_DIVMOD
                      .FILL      #1
                      .STRINGZ   "!"
 code_STORE           .FILL      STORE
@@ -1004,7 +1166,11 @@ name_KEY             .FILL      name_DSPSTORE
                      .FILL      #3
                      .STRINGZ   "KEY"
 code_KEY             .FILL      KEY
-name_EMIT            .FILL      name_KEY
+name_KEYSOURCE       .FILL      name_KEY
+                     .FILL      #9
+                     .STRINGZ   "KEYSOURCE"
+code_KEYSOURCE       .FILL      KEYSOURCE
+name_EMIT            .FILL      name_KEYSOURCE
                      .FILL      #4
                      .STRINGZ   "EMIT"
 code_EMIT            .FILL      EMIT
@@ -1024,7 +1190,11 @@ name_LIT             .FILL      name_EXIT
                      .FILL      #3
                      .STRINGZ   "LIT"
 code_LIT             .FILL      LIT
-name_WORD            .FILL      name_LIT
+name_LITSTRING       .FILL      name_LIT
+                     .FILL      #9
+                     .STRINGZ   "LITSTRING"
+code_LITSTRING       .FILL      LITSTRING
+name_WORD            .FILL      name_LITSTRING
                      .FILL      #4
                      .STRINGZ   "WORD"
 code_WORD            .FILL      WORD
@@ -1048,19 +1218,7 @@ name_EXECUTE         .FILL      name_PARSE_ERROR
                      .FILL      #7
                      .STRINGZ   "EXECUTE"
 code_EXECUTE         .FILL      EXECUTE
-name_STATE           .FILL      name_EXECUTE
-                     .FILL      #5
-                     .STRINGZ   "STATE"
-code_STATE           .FILL      STATE
-name_BASE            .FILL      name_STATE
-                     .FILL      #4
-                     .STRINGZ   "BASE"
-code_BASE            .FILL      BASE
-name_HERE            .FILL      name_BASE
-                     .FILL      #4
-                     .STRINGZ   "HERE"
-code_HERE            .FILL      HERE
-name__F_IMMED        .FILL      name_HERE
+name__F_IMMED        .FILL      name_EXECUTE
                      .FILL      #7
                      .STRINGZ   "F_IMMED"
 code__F_IMMED        .FILL      _F_IMMED
@@ -1100,75 +1258,27 @@ name_ZBRANCH         .FILL      name_BRANCH
                      .FILL      #7
                      .STRINGZ   "0BRANCH"
 code_ZBRANCH         .FILL      ZBRANCH
-name_IF              .FILL      name_ZBRANCH
-                     .FILL      #130
-                     .STRINGZ   "IF"
-code_IF              .FILL      DOCOL
-                     .FILL      code_TICK
-                     .FILL      code_ZBRANCH
-                     .FILL      code_COMMA
-                     .FILL      code_HERE
-                     .FILL      code_FETCH
-                     .FILL      code_LIT
-                     .FILL      #0
-                     .FILL      code_COMMA
-                     .FILL      code_EXIT
-name_ELSE            .FILL      name_IF
-                     .FILL      #132
-                     .STRINGZ   "ELSE"
-code_ELSE            .FILL      DOCOL
-                     .FILL      code_TICK
-                     .FILL      code_BRANCH
-                     .FILL      code_COMMA
-                     .FILL      code_HERE
-                     .FILL      code_FETCH
-                     .FILL      code_LIT
-                     .FILL      #0
-                     .FILL      code_COMMA
-                     .FILL      code_SWAP
-                     .FILL      code_DUP
-                     .FILL      code_HERE
-                     .FILL      code_FETCH
-                     .FILL      code_SWAP
-                     .FILL      code_SUBTRACT
-                     .FILL      code_SWAP
-                     .FILL      code_STORE
-                     .FILL      code_EXIT
-name_THEN            .FILL      name_ELSE
-                     .FILL      #132
-                     .STRINGZ   "THEN"
-code_THEN            .FILL      DOCOL
-                     .FILL      code_DUP
-                     .FILL      code_HERE
-                     .FILL      code_FETCH
-                     .FILL      code_SWAP
-                     .FILL      code_SUBTRACT
-                     .FILL      code_SWAP
-                     .FILL      code_STORE
-                     .FILL      code_EXIT
-name_2DUP            .FILL      name_THEN
+name_STATE           .FILL      name_ZBRANCH
+                     .FILL      #5
+                     .STRINGZ   "STATE"
+code_STATE           .FILL      STATE
+name_BASE            .FILL      name_STATE
                      .FILL      #4
-                     .STRINGZ   "2DUP"
-code_2DUP            .FILL      DOCOL
-                     .FILL      code_OVER
-                     .FILL      code_OVER
+                     .STRINGZ   "BASE"
+code_BASE            .FILL      BASE
+name_HERE            .FILL      name_BASE
+                     .FILL      #4
+                     .STRINGZ   "HERE"
+code_HERE            .FILL      HERE
+name_LOAD            .FILL      name_HERE
+                     .FILL      #4
+                     .STRINGZ   "LOAD"
+code_LOAD            .FILL      DOCOL
+                     .FILL      code_FILELOC
+                     .FILL      code_KEYSOURCE
+                     .FILL      code_STORE
                      .FILL      code_EXIT
-name_CR              .FILL      name_2DUP
-                     .FILL      #2
-                     .STRINGZ   "CR"
-code_CR              .FILL      DOCOL
-                     .FILL      code_LIT
-                     .FILL      #10
-                     .FILL      code_EMIT
-                     .FILL      code_EXIT
-name_NEGATE          .FILL      name_CR
-                     .FILL      #6
-                     .STRINGZ   "NEGATE"
-code_NEGATE          .FILL      DOCOL
-                     .FILL      code_NOTF
-                     .FILL      code_INCR
-                     .FILL      code_EXIT
-name_colo            .FILL      name_NEGATE
+name_colo            .FILL      name_LOAD
                      .FILL      #1
                      .STRINGZ   ":"
 code_colo            .FILL      DOCOL
@@ -1219,35 +1329,7 @@ code_IMMEDIATE       .FILL      DOCOL
                      .FILL      code_SWAP
                      .FILL      code_STORE
                      .FILL      code_EXIT
-name_dotS            .FILL      name_IMMEDIATE
-                     .FILL      #2
-                     .STRINGZ   ".S"
-code_dotS            .FILL      DOCOL
-                     .FILL      code_DSPFETCH
-                     .FILL      code_SZ
-                     .FILL      code_OVER
-                     .FILL      code_OVER
-                     .FILL      code_GT
-                     .FILL      code_ZBRANCH
-                     .FILL      #8
-                     .FILL      code_INCR
-                     .FILL      code_DUP
-                     .FILL      code_FETCH
-                     .FILL      code_DOTB
-                     .FILL      code_CR
-                     .FILL      code_BRANCH
-                     .FILL      #-11
-                     .FILL      code_DROP
-                     .FILL      code_DROP
-                     .FILL      code_EXIT
-name_CLEAR           .FILL      name_dotS
-                     .FILL      #5
-                     .STRINGZ   "CLEAR"
-code_CLEAR           .FILL      DOCOL
-                     .FILL      code_SZ
-                     .FILL      code_DSPSTORE
-                     .FILL      code_EXIT
-name_QUIT            .FILL      name_CLEAR
+name_QUIT            .FILL      name_IMMEDIATE
                      .FILL      #4
                      .STRINGZ   "QUIT"
 code_QUIT            .FILL      DOCOL
@@ -1257,23 +1339,25 @@ code_QUIT            .FILL      DOCOL
                      .FILL      code_BRANCH
                      .FILL      #-2
                      .FILL      code_EXIT
-name_NIP             .FILL      name_QUIT
-                     .FILL      #3
-                     .STRINGZ   "NIP"
-code_NIP             .FILL      DOCOL
-                     .FILL      code_SWAP
-                     .FILL      code_DROP
-                     .FILL      code_EXIT
-name_NOT_IMMED       .FILL      name_NIP
-                     .FILL      #9
-                     .STRINGZ   "NOT_IMMED"
-code_NOT_IMMED       .FILL      DOCOL
+name_quesIMMEDIATE   .FILL      name_QUIT
+                     .FILL      #10
+                     .STRINGZ   "?IMMEDIATE"
+code_quesIMMEDIATE   .FILL      DOCOL
                      .FILL      code_INCR
                      .FILL      code_FETCH
                      .FILL      code__F_IMMED
                      .FILL      code_ANDF
                      .FILL      code_EXIT
-name_INTERPRET       .FILL      name_NOT_IMMED
+name_quesHIDDEN      .FILL      name_quesIMMEDIATE
+                     .FILL      #7
+                     .STRINGZ   "?HIDDEN"
+code_quesHIDDEN      .FILL      DOCOL
+                     .FILL      code_INCR
+                     .FILL      code_FETCH
+                     .FILL      code__F_HIDDEN
+                     .FILL      code_ANDF
+                     .FILL      code_EXIT
+name_INTERPRET       .FILL      name_quesHIDDEN
                      .FILL      #9
                      .STRINGZ   "INTERPRET"
 code_INTERPRET       .FILL      DOCOL
@@ -1283,15 +1367,17 @@ code_INTERPRET       .FILL      DOCOL
                      .FILL      code_FIND
                      .FILL      code_DUP
                      .FILL      code_ZBRANCH
-                     .FILL      #19
-                     .FILL      code_NIP
-                     .FILL      code_NIP
+                     .FILL      #21
+                     .FILL      code_SWAP
+                     .FILL      code_DROP
+                     .FILL      code_SWAP
+                     .FILL      code_DROP
                      .FILL      code_STATE
                      .FILL      code_FETCH
                      .FILL      code_ZBRANCH
                      .FILL      #5
                      .FILL      code_DUP
-                     .FILL      code_NOT_IMMED
+                     .FILL      code_quesIMMEDIATE
                      .FILL      code_ZBRANCH
                      .FILL      #5
                      .FILL      code_TCFA
@@ -1301,14 +1387,22 @@ code_INTERPRET       .FILL      DOCOL
                      .FILL      code_TCFA
                      .FILL      code_COMMA
                      .FILL      code_BRANCH
-                     .FILL      #18
+                     .FILL      #26
                      .FILL      code_DROP
                      .FILL      code_NUMBER
                      .FILL      code_ZBRANCH
-                     .FILL      #6
+                     .FILL      #14
                      .FILL      code_DROP
                      .FILL      code_PARSE_ERROR
                      .FILL      code_EMITS
+                     .FILL      code_KEYSOURCE
+                     .FILL      code_FETCH
+                     .FILL      code_ZBRANCH
+                     .FILL      #5
+                     .FILL      code_LIT
+                     .FILL      #0
+                     .FILL      code_KEYSOURCE
+                     .FILL      code_STORE
                      .FILL      code_BRANCH
                      .FILL      #9
                      .FILL      code_STATE

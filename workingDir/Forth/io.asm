@@ -3,14 +3,53 @@
 						JSR			_KEY
 						JSR			PUSH_R0
 						JSR			NEXT
-						
+
 _KEY					ST			R7,KEY_CB
-						GETC
+
+						LD			R1,var_KEYSOURCE
+						BRz			KEY_board
+						
+						( We only get here if we're reading a file )
+						LDR			R0,R1,#0
+						BRz			KEY_eof
+						
 						OUT
-						LD			R7,KEY_CB
+						
+						ADD			R1,R1,#1
+						ST			R1,var_KEYSOURCE
+						BRnzp		KEY_cleanup
+						
+KEY_eof					AND			R1,R1,#0			( set KEYSOURCE back to 0 if eof )
+						ST			R1,var_KEYSOURCE	( and we're going to want to read the next key from the keyboard )
+						LD			R0,key_NL
+						BRnzp		KEY_cleanup
+						
+						( we come here if we're reading from keyboard )
+KEY_board				GETC
+						
+						LD			R1,key_NL
+						ADD			R1,R1,R0
+						BRz			KEY_out
+						
+						LD			R1,key_TAB
+						ADD			R1,R1,R0
+						BRz			KEY_out
+						
+						LD			R1,key_PRINTABLE
+						ADD			R1,R1,R0
+						BRn			KEY_cleanup			( not printable char )
+						
+KEY_out					OUT
+						
+KEY_cleanup				LD			R7,KEY_CB
 						RET
+						
 KEY_CB					.BLKW		1
+key_TAB					.FILL		#-9
+key_NL					.FILL		#-10
+key_PRINTABLE			.FILL		#-32
 }
+#variable KEYSOURCE KEYSOURCE <#0>
 #primitive EMIT EMIT
 {
 						JSR			POP_R0
@@ -19,7 +58,7 @@ KEY_CB					.BLKW		1
 }
 ( This is designed for use with String constants and other null-terminated strings. Be careful! )
 #primitive EMITS EMITS
-{												
+{
 						JSR			POP_R0		( Base )
 						PUTS					( We're going to trust in null-terminator )
 						JSR			NEXT

@@ -10,6 +10,16 @@
 						JSR			PUSH_R0					( Push it on the stack )
 						JSR			NEXT
 }
+#primitive LITSTRING LITSTRING
+{
+						LDR			R0,R6,#0				( Grab the length )
+						ADD			R6,R6,#1				( Skip it )
+						AND			R1,R6,R6				( get the start )
+						ADD			R6,R6,R0				( skip past the string )
+						JSR			PUSH_R1					( the address )
+						JSR			PUSH_R0					( the length )
+						JSR			NEXT
+}
 #primitive WORD WORD
 {
 						JSR			_WORD
@@ -21,8 +31,6 @@ _WORD					ST			R7,WORD_CB
 
 _WORD_start				JSR			_KEY
 						LD			R1,c_BACKSLASH
-						NOT			R1,R1
-						ADD			R1,R1,#1
 						ADD			R2,R1,R0	( Check if equal )
 						BRz			_WORD_skip_comments
 						
@@ -54,35 +62,48 @@ _WORD_cleanup			LD			R2,WORD_buffbot
 						
 _WORD_skip_comments		JSR			_KEY
 						LD			R1,c_NEW_LINE
-						NOT			R1,R1
-						ADD			R1,R1,#1
 						ADD			R2,R1,R0	( Check if equal )
 						BRnp		_WORD_skip_comments
 						BRzp		_WORD_start
 						
 _WORD_check_white		LD			R1,c_TAB
-						NOT			R1,R1
-						ADD			R1,R1,#1
 						ADD			R2,R1,R0	( Check if equal )
 						BRz			_WORD_check_white_l
+						
 						LD			R1,c_SPACE
-						NOT			R1,R1
-						ADD			R1,R1,#1
 						ADD			R2,R1,R0	( Check if equal )
 						BRz			_WORD_check_white_l
+						
 						LD			R1,c_NEW_LINE
-						NOT			R1,R1
-						ADD			R1,R1,#1
 						ADD			R2,R1,R0	( Check if equal )
 						BRz			_WORD_check_white_l
+						
+						LD			R1,c_ESC
+						ADD			R2,R1,R0	( Check if equal )
+						BRz			_WORD_restart
+						
+						LD			R1,c_BACKSPACE
+						ADD			R2,R1,R0	( Check if equal )
+						BRz			_WORD_restart
 
 						RET
 _WORD_check_white_l		JMP			R3
+
+_WORD_restart			LD			R0,char_BLOCK
+						OUT
+						LD			R0,c_SPACE
+						NOT			R0,R0
+						ADD			R0,R0,#1
+						OUT
+						BRnzp		_WORD_start
 						
-c_BACKSLASH				.FILL		#92
-c_TAB					.FILL		#9
-c_NEW_LINE				.FILL		#10
-c_SPACE					.FILL		#32
+c_BACKSLASH				.FILL		#-92
+c_TAB					.FILL		#-9
+c_NEW_LINE				.FILL		#-10
+c_SPACE					.FILL		#-32
+c_BACKSPACE				.FILL		#-8
+c_ESC					.FILL		#-27
+char_BLOCK				.FILL		#149
 
 WORD_CB					.BLKW		1
 WORD_buffptr			.FILL		WORD_BUFFER
@@ -142,6 +163,10 @@ _NUMBER_process			LD			R3,CHAR_zero
 						BRn			_NUMBER_cleanup ( ASCII < 0 means not valid digits )
 						ADD			R2,R3,#-10		( ASCII <= 9 means we can save it )
 						BRn			_NUMBER_save
+						LD			R2,CHAR_subA
+						ADD			R3,R3,R2		( subtract 17 to get to A B C )
+						BRn			_NUMBER_cleanup	( if less than A but greater than 9, bad number )
+						ADD			R3,R3,#10		( add 10 so A = 10, B = 11, etc )
 						
 _NUMBER_save			LD			R2,var_BASE
 						NOT			R2,R2
@@ -173,7 +198,7 @@ NUMBER_sign				.FILL		#0		( <> 0 means not neg )
 NUMBER_length			.BLKW		1
 CHAR_zero				.FILL		#48		( 0 )
 CHAR_neg_sign			.FILL		#45
-CHAR_subA				.FILL		#17		( 'A' - '0', used to turn A into 0, B into 1, etc )
+CHAR_subA				.FILL		#-17		( 'A' - '0', used to turn A into 0, B into 1, etc )
 }
 #primitive FIND FIND
 {
@@ -263,7 +288,7 @@ _TCFA					AND			R1,R1,#0
 						LEA			R0,const_PARSE_ERROR
 						JSR			PUSH_R0
 						JSR			NEXT
-const_PARSE_ERROR		.STRINGZ	"\nPARSE ERROR\n"
+const_PARSE_ERROR		.STRINGZ	"\nUNKNOWN WORD\n"
 }
 #primitive EXECUTE EXECUTE
 {
@@ -271,4 +296,96 @@ const_PARSE_ERROR		.STRINGZ	"\nPARSE ERROR\n"
 						LDR			R2,R3,#0		( Load data at address -- this holds the next codeword )
 						JMP			R2				( jump there -- NEXT will work from that point )
 EXECUTE_target			.BLKW		1
+}
+#primitive F_IMMED _F_IMMED
+{
+						LD			R0,F_IMMED
+						JSR			PUSH_R0
+						JSR			NEXT
+F_IMMED					.FILL		x80
+}
+#primitive F_HIDDEN _F_HIDDEN
+{
+						LD			R0,F_HIDDEN
+						JSR			PUSH_R0
+						JSR			NEXT
+F_HIDDEN				.FILL		x20
+}
+#primitive F_LENMASK _F_LENMASK
+{
+						LD			R0,F_LENMASK
+						JSR			PUSH_R0
+						JSR			NEXT
+F_LENMASK				.FILL		x1f
+}
+#primitive CREATE CREATE
+{
+						JSR			POP_R0				( length of name )
+						JSR			POP_R1				( address of name )
+						LD			R2,var_HERE			( address of header )
+						LD			R3,var_LATEST		( link pointer )
+						STR			R3,R2,#0			( store link at head )
+						ADD			R2,R2,#1			( increment pointer )
+						STR			R0,R2,#0			( store the length )
+						ADD			R2,R2,#1			( increment pointer )
+						
+_CREATE_copy_loop		LDR			R3,R1,#0			( load the char )
+						STR			R3,R2,#0			( store it )
+						ADD			R2,R2,#1			( increment destination pointer )
+						ADD			R1,R1,#1			( increment source pointer )
+						ADD			R0,R0,#-1			( and count down )
+						BRp			_CREATE_copy_loop	( loop until zero )
+						
+						STR			R0,R2,#0			( store 0 [null-terminator] )
+						ADD			R2,R2,#1			( increment destination pointer )
+						
+						LD			R0,var_HERE			( var_HERE is where we started making this definition )
+						ST			R0,var_LATEST		( so make var_LATEST point there )
+						ST			R2,var_HERE			( and make var_HERE point to the end )
+						JSR			NEXT
+}
+#primitive , COMMA
+{
+						JSR			POP_R0				( code pointer we're going to store )
+						JSR			_COMMA
+						JSR			NEXT
+						
+_COMMA					LD			R1,var_HERE
+						STR			R0,R1,#0			( store code pointer at HERE )
+						ADD			R1,R1,#1			( increment pointer )
+						ST			R1,var_HERE			( and store it in HERE )
+						RET
+}
+#primitive [ LBRAC 128
+{
+						AND			R0,R0,#0
+						ST			R0,var_STATE
+						JSR			NEXT
+}
+#primitive ] RBRAC
+{
+						AND			R0,R0,#0
+						ADD			R0,R0,#1
+						ST			R0,var_STATE
+						JSR			NEXT
+}
+#primitive ' TICK
+{
+						LDR			R0,R6,#0		( Grab the next address )
+						ADD			R6,R6,#1		( Skip that address )
+						JSR			PUSH_R0			( Push the address on the stack )
+						JSR			NEXT
+}
+#primitive BRANCH BRANCH
+{
+						LDR			R0,R6,#0		( Grab the next item, this is our offset )
+						ADD			R6,R6,R0		( Add it to R6 to skip forward )
+						JSR			NEXT
+}
+#primitive 0BRANCH ZBRANCH
+{
+						JSR			POP_R0
+						BRz			BRANCH			( If top of stack was zero, goto BRANCH )
+						ADD			R6,R6,#1		( otherwise just skip the offset )
+						JSR			NEXT
 }

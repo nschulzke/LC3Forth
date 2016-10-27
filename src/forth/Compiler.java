@@ -125,7 +125,7 @@ public final class Compiler
 	}
 
 	public static Collection<String> compileLines(Collection<String> compileLines, Collection<String> templateLines)
-			throws InvalidAssemblyException, Exception
+			throws InvalidAssemblyException, UnknownNameException, Exception
 	{
 		return compile(parse(lex(compileLines)), templateLines);
 	}

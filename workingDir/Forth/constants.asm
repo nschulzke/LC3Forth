@@ -16,3 +16,10 @@
 						JSR			PUSH_R0
 						JSR			NEXT
 }
+#primitive FILELOC FILELOC
+{
+						LD			R0,_FILELOC
+						JSR			PUSH_R0
+						JSR			NEXT
+_FILELOC				.FILL		x4000
+}
