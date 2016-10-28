@@ -15,9 +15,13 @@
 	FILELOC KEYSOURCE !
 ;
 
-: :
-	WORD CREATE
+: HEADER
+	WORD (HEADER)
 	DOCOL ,
+;
+
+: :
+	HEADER
 	LATEST @
 	HIDDEN
 	]

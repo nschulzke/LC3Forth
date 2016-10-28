@@ -15,23 +15,28 @@
 	>CFA ,
 ;
 
+: CREATE
+	HEADER
+	' LIT ,
+	HERE @ 2 + ,
+	' EXIT ,
+;
+
 : CONSTANT
-	WORD CREATE		\ Create the entry
-	DOCOL ,			\ Append DOCOL
+	HEADER
 	' LIT ,			\ Append LIT
 	,				\ Append the top of the stack
 	' EXIT ,		\ And append EXIT
 ;
 
-\ Gets the address of a newly allocated bit of memory
-: ALLOT
-	HERE @ SWAP		\ ( here n )
-	HERE +!			\ ( adds n to here, old here is still on stack )
+: VARIABLE
+	CREATE
+	0 ,				\ Variable
 ;
 
-: VARIABLE
-	1 ALLOT			\ get our memory location
-	CONSTANT		\ create a contant pointing to the ALLOTed address
+\ Reserves memory locations after HERE
+: ALLOT
+	HERE +!			\ ( adds n to here, old here is still on stack )
 ;
 
 : HIDE WORD FIND HIDDEN ;
@@ -120,7 +125,7 @@
 		ELSE
 			NUMBER						( addr len -- num err )
 			0= UNLESS					\ Unless there's no error
-				DROP ." UNKNOWN WORD" CR
+				DROP ." UNKNOWN WORD "
 				KEYSOURCE @ IF			\ If we're running a file
 					0 KEYSOURCE !		\ Abort so we can see the message
 				THEN

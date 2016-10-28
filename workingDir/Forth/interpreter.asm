@@ -329,7 +329,7 @@ F_HIDDEN				.FILL		x20
 						JSR			NEXT
 F_LENMASK				.FILL		x1f
 }
-#primitive CREATE CREATE
+#primitive (HEADER) _HEADER
 {
 						JSR			POP_R0				( length of name )
 						JSR			POP_R1				( address of name )

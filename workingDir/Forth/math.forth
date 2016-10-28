@@ -40,7 +40,7 @@
 ;
 
 : 2*
-	2 *
+	DUP +	\ much faster than multiplication
 ;
 
 : 2/
