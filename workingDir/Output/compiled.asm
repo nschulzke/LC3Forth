@@ -304,7 +304,7 @@ DIV_ZERO_RETURN      AND        R0,R0,#0
 DIV_ZERO_ERROR       LEA        R0,DIV_ZERO_ERR_MSG
                      PUTS       
                      HALT       
-DIV_ZERO_ERR_MSG     .STRINGZ   "\nATTEMPTED TO DIVIDE BY ZERO\n"
+DIV_ZERO_ERR_MSG     .STRINGZ   "ZERO DENOMINATOR\n"
 
 DIV_R0               .BLKW      1
 DIV_R1               .BLKW      1
@@ -410,6 +410,8 @@ _KEY                 ST         R7,KEY_CB
 KEY_eof              AND        R1,R1,#0
                      ST         R1,var_KEYSOURCE
                      LD         R0,key_NL
+                     NOT        R0,R0
+                     ADD        R0,R0,#1
                      BRnzp      KEY_cleanup
 
 
@@ -417,7 +419,7 @@ KEY_board            GETC
 
                      LD         R1,key_NL
                      ADD        R1,R1,R0
-                     BRz        KEY_out
+                     BRz        KEY_cleanup_NL
 
                      LD         R1,key_TAB
                      ADD        R1,R1,R0
@@ -432,10 +434,22 @@ KEY_out              OUT
 KEY_cleanup          LD         R7,KEY_CB
                      RET        
 
+KEY_cleanup_NL       ST         R0,var_DELAYED_NL
+                     LD         R0,key_SPACE
+                     OUT        
+                     LD         R0,var_DELAYED_NL
+                     BRnzp      KEY_cleanup
+
 KEY_CB               .BLKW      1
 key_TAB              .FILL      #-9
 key_NL               .FILL      #-10
 key_PRINTABLE        .FILL      #-32
+key_SPACE            .FILL      #32
+DELAYED_NL
+                     LEA        R0,var_DELAYED_NL
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_DELAYED_NL       .FILL      #0
 KEYSOURCE
                      LEA        R0,var_KEYSOURCE
                      JSR        PUSH_R0
@@ -498,12 +512,23 @@ WORD
 _WORD                ST         R7,WORD_CB
 
 _WORD_start          JSR        _KEY
-                     LD         R1,c_BACKSLASH
+
+                     LD         R1,c_NEW_LINE
+                     ADD        R2,R1,R0
+                     BRnp       _WORD_skip_NL
+                     NOT        R0,R1
+                     ADD        R0,R0,#1
+                     OUT        
+                     AND        R1,R1,#0
+                     ST         R1,var_DELAYED_NL
+
+_WORD_skip_NL        LD         R1,c_BACKSLASH
                      ADD        R2,R1,R0
                      BRz        _WORD_skip_comments
 
                      LEA        R3,_WORD_start
                      JSR        _WORD_check_white
+
                      LD         R1,WORD_buffbot
                      STR        R0,R1,#0
                      ADD        R1,R1,#1
@@ -951,7 +976,7 @@ EMPTY_STACK				LEA			R0,EMPTY_STACK_ERR
 						PUTS
 						JSR			RESET
 
-EMPTY_STACK_ERR			.STRINGZ	"\nSTACK UNDERFLOW!\n"
+EMPTY_STACK_ERR			.STRINGZ	"STACK UNDERFLOW!\n"
 
 EMPTY_STACK_RET			.BLKW		1
 
@@ -1166,7 +1191,11 @@ name_KEY             .FILL      name_DSPSTORE
                      .FILL      #3
                      .STRINGZ   "KEY"
 code_KEY             .FILL      KEY
-name_KEYSOURCE       .FILL      name_KEY
+name_DELAYED_NL      .FILL      name_KEY
+                     .FILL      #10
+                     .STRINGZ   "DELAYED_NL"
+code_DELAYED_NL      .FILL      DELAYED_NL
+name_KEYSOURCE       .FILL      name_DELAYED_NL
                      .FILL      #9
                      .STRINGZ   "KEYSOURCE"
 code_KEYSOURCE       .FILL      KEYSOURCE
@@ -1413,6 +1442,17 @@ code_INTERPRET       .FILL      DOCOL
                      .FILL      code_LIT
                      .FILL      code_COMMA
                      .FILL      code_COMMA
+                     .FILL      code_DELAYED_NL
+                     .FILL      code_FETCH
+                     .FILL      code_ZBRANCH
+                     .FILL      #8
+                     .FILL      code_LIT
+                     .FILL      #10
+                     .FILL      code_EMIT
+                     .FILL      code_LIT
+                     .FILL      #0
+                     .FILL      code_DELAYED_NL
+                     .FILL      code_STORE
                      .FILL      code_EXIT
 name_LATEST          .FILL      name_INTERPRET
                      .FILL      #6

@@ -31,7 +31,7 @@ KEY_board				GETC
 						
 						LD			R1,key_NL
 						ADD			R1,R1,R0
-						BRz			KEY_out
+						BRz			KEY_cleanup_NL
 						
 						LD			R1,key_TAB
 						ADD			R1,R1,R0
@@ -42,15 +42,23 @@ KEY_board				GETC
 						BRn			KEY_cleanup			( not printable char )
 						
 KEY_out					OUT
-						
+
 KEY_cleanup				LD			R7,KEY_CB
 						RET
+						
+KEY_cleanup_NL			ST			R0,var_DELAYED_NL
+						LD			R0,key_SPACE
+						OUT
+						LD			R0,var_DELAYED_NL
+						BRnzp		KEY_cleanup
 						
 KEY_CB					.BLKW		1
 key_TAB					.FILL		#-9
 key_NL					.FILL		#-10
 key_PRINTABLE			.FILL		#-32
+key_SPACE				.FILL		#32
 }
+#variable DELAYED_NL DELAYED_NL <#0>
 #variable KEYSOURCE KEYSOURCE <#0>
 #primitive EMIT EMIT
 {

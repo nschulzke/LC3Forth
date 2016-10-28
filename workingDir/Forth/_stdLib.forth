@@ -131,6 +131,11 @@
 				THEN
 			THEN		\ No else: if we're not compiling, the number is already on the stack
 		THEN
+		DELAYED_NL @
+		IF
+			CR
+			0 DELAYED_NL !
+		THEN
 	AGAIN
 ;
 
@@ -152,7 +157,6 @@
 	Type WORDS to get a list of available commands.
 	
 	Enjoy!"
-	CR
 	CR
 ;
 
