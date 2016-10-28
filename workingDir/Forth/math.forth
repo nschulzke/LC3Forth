@@ -18,30 +18,25 @@
 
 ( A B -- A*B )
 : *
-	DUP 0= IF
-		DROP DROP
+	?DUP UNLESS
+		DROP		\ drop A
 		0 EXIT		\ return 0
 	THEN
+	
 	DUP 1 = IF
 		DROP EXIT	\ return A
 	THEN
 	
 	DUP	0< -ROT		( S A B )
 	ABS				( S A |B| )
-	DUP >R			( ret: |B| )
-	DUP_TIMES		( S A A A ... )
-	R>				( S A ... A A |B| )
-	1-
-	BEGIN			( S A ... A A |B| )
-		-ROT		( S A ... |B| A A )
-		+			( S A ... |B| A+A )
-		SWAP		( S A ... A+A |B| )
-		1-
-		DUP 0<=		\ While we haven't hit zero
-	UNTIL
-	DROP
-	SWAP			\ Get sign
-	IF NEGATE THEN	\ If sign is TRUE, then it was Negative
+	
+	OVER SWAP		( S A A |B| )
+	1 DO
+		OVER +		( S A A+A )
+	LOOP
+	SWAP DROP		( S A*B )
+
+	SWAP IF NEGATE THEN		\ If sign is TRUE, then it was Negative
 ;
 
 : 2*

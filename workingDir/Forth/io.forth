@@ -95,26 +95,21 @@
 : ? @ . ;
 
 : .S
-	DSP@			( dsp )
-	S0				( dsp S0<addr> )
+	DSP@ S0			( dsp S0<addr> )
 	BEGIN
-		OVER OVER	( dsp addr dsp addr )
-		>			( dsp addr dsp>addr )
+		2DUP >		( dsp addr dsp>addr )
 	WHILE
 		1+			( dsp addr+1 )
 		DUP @		( dsp addr+1 data )
 		.			( dsp addr+1 ) \ output number
 	REPEAT
-	DROP DROP		\ clean up after ourselves
+	2DROP
 ;
 
 : CLS
-	ROWS
-	BEGIN
+	ROWS 1 DO
 		CR
-		1-
-	DUP 0<= UNTIL	\ Loop until we're done
-	DROP
+	LOOP
 ;
 
 : ID.
@@ -171,7 +166,7 @@
 		SWAP 1-		( addr count )	\ decrement counter
 		TUCK		( count addr count )
 	0<= UNTIL
-	DROP DROP		\ cleanup ( count addr )
+	2DROP			\ cleanup stack
 ;
 
 : S" IMMEDIATE
@@ -274,72 +269,75 @@
 
 : SEE
 	WORD FIND		\ Get the word
-	
-	\ Search the stack for the next word to get the length
-	HERE @			( word last ) \ last word
-	LATEST @		( word last curr )
-	BEGIN
-		2 PICK		( word last curr word )
-		OVER		( word last curr word curr )
-		<>			( word last curr word<>curr? )
-	WHILE			( word last curr )
-		NIP			( word curr )
-		DUP @		( word curr prev )
-	REPEAT
-	
-	DROP SWAP		( end-of-word start-of-word )
-	
-	\ start with ": NAME [IMMEDIATE] "
-	':' EMIT SPACE DUP ID. SPACE
-	DUP ?IMMEDIATE IF ." IMMEDIATE " THEN
-	
-	>DFA			( end start )
-	BEGIN
-		2DUP >		\ as long as we haven't hit end
-	WHILE
-		DUP @		( end start word )
-	
-		CASE
-			' LIT OF
-				1+ DUP @ .  \ if LIT, print the literal value
-			ENDOF
-			' LITSTRING OF
-				[ KEY S ] LITERAL EMIT '"' EMIT SPACE \ print 'S" '
-				1+ DUP @		( end lenAddr len )
-				SWAP 1+ SWAP	( end addr len )
-				2DUP TELL		\ print the string
-				'"' EMIT SPACE	\ final quote and space
-				+				( end addr+len )
-				1-				\ we're going to add 1 again below
-			ENDOF
-			' 0BRANCH OF
-				." 0BRANCH ( "
-				1+ DUP @ .		\ print offset
-				." ) "
-			ENDOF
-			' BRANCH OF
-				." BRANCH ( "
-				1+ DUP @ .		\ print offset
-				." ) "
-			ENDOF
-			' ' OF
-				[ KEY ' ] LITERAL EMIT SPACE
-				1+ DUP @		\ get the next word
-				CFA> ID. SPACE	\ and print the next name
-			ENDOF
-			' EXIT OF
-				2DUP			( end start end start )
-				1+				( end start end start+1 )
-				<> IF
-					." EXIT "	\ if it's not the last EXIT, print it
-				THEN
-			ENDOF
-			\ If it's not a special case above
-			( end start )
-			DUP CFA> ID. SPACE		\ print the word
-		ENDCASE
-		1+	( end start+1 )
-	REPEAT
-	';' EMIT CR
-	DROP DROP
+	?DUP IF
+		\ Search the stack for the next word to get the length
+		HERE @			( word last ) \ last word
+		LATEST @		( word last curr )
+		BEGIN
+			2 PICK		( word last curr word )
+			OVER		( word last curr word curr )
+			<>			( word last curr word<>curr? )
+		WHILE			( word last curr )
+			NIP			( word curr )
+			DUP @		( word curr prev )
+		REPEAT
+		
+		DROP SWAP		( end-of-word start-of-word )
+		
+		\ start with ": NAME [IMMEDIATE] "
+		':' EMIT SPACE DUP ID. SPACE
+		DUP ?IMMEDIATE IF ." IMMEDIATE " THEN
+		
+		>DFA			( end start )
+		BEGIN
+			2DUP >		\ as long as we haven't hit end
+		WHILE
+			DUP @		( end start word )
+		
+			CASE
+				' LIT OF
+					1+ DUP @ .  \ if LIT, print the literal value
+				ENDOF
+				' LITSTRING OF
+					[ KEY S ] LITERAL EMIT '"' EMIT SPACE \ print 'S" '
+					1+ DUP @		( end lenAddr len )
+					SWAP 1+ SWAP	( end addr len )
+					2DUP TELL		\ print the string
+					'"' EMIT SPACE	\ final quote and space
+					+				( end addr+len )
+					1-				\ we're going to add 1 again below
+				ENDOF
+				' 0BRANCH OF
+					." 0BRANCH ( "
+					1+ DUP @ .		\ print offset
+					." ) "
+				ENDOF
+				' BRANCH OF
+					." BRANCH ( "
+					1+ DUP @ .		\ print offset
+					." ) "
+				ENDOF
+				' ' OF
+					[ KEY ' ] LITERAL EMIT SPACE
+					1+ DUP @		\ get the next word
+					CFA> ID. SPACE	\ and print the next name
+				ENDOF
+				' EXIT OF
+					2DUP			( end start end start )
+					1+				( end start end start+1 )
+					<> IF
+						." EXIT "	\ if it's not the last EXIT, print it
+					THEN
+				ENDOF
+				\ If it's not a special case above
+				( end start )
+				DUP CFA> ID. SPACE		\ print the word
+			ENDCASE
+			1+	( end start+1 )
+		REPEAT
+		';' EMIT CR
+		DROP DROP
+	ELSE
+		." UNKNOWN WORD" CR
+	THEN	\ ends IF found
 ;

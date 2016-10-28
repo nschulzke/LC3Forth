@@ -36,18 +36,7 @@
 
 : HIDE WORD FIND HIDDEN ;
 
-: DEPTH
-	DSP@ S0 -	( depth )
-;
-
-: 2DUP
-	OVER OVER
-;
-
-: 2DROP
-	DROP DROP
-;
-
+#include stackops.forth
 #include control.forth
 #include comments.forth
 
@@ -111,37 +100,6 @@
 
 : CLEAR
 	S0 DSP!
-;
-
-( limit index -- | -- limit index )
-: DO
-	R>				\ ( limit index pointer )
-	-ROT SWAP		\ ( pointer index limit )
-	>R >R >R		\ ( limit index pointer ) on return
-;
-
-: DO IMMEDIATE
-	' DO ,
-	[ HIDE DO ]
-	[COMPILE] BEGIN
-;
-
-: LOOP
-	R> R> R>		\ ( pointer index limit )
-	SWAP			\ ( pointer limit index )
-	1+ 2DUP 		\ ( pointer limit index limit index )
-	<=				\ ( pointer limit index flag )
-	-ROT SWAP		\ ( pointer flag index limit )
-	>R >R			\ ( pointer flag | limit index )
-	SWAP >R			\ ( flag | limit index pointer )
-;
-
-: LOOP IMMEDIATE
-	' LOOP ,
-	[ HIDE LOOP ]
-	[COMPILE] UNTIL
-	' R> , ' R> ,	\ clean up return stack
-	' 2DROP ,
 ;
 
 : INTERPRET

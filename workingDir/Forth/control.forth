@@ -87,3 +87,30 @@
 		[COMPILE] THEN
 	REPEAT
 ;
+
+( limit index -- | -- limit index )
+: (DO)
+	R>				\ ( limit index pointer )
+	-ROT			\ ( pointer limit index )
+	2>R >R			\ ( limit index pointer ) on return
+;
+
+: (LOOP)
+	R>				\ ( pointer | limit index )
+	2R>				\ ( pointer limit index | )
+	1+ 2DUP 		\ ( pointer limit index limit index )
+	<=				\ ( pointer limit index flag )
+	-ROT 2>R		\ ( pointer flag | limit index )
+	SWAP >R			\ ( flag | limit index pointer )
+;
+
+: DO IMMEDIATE
+	' (DO) ,
+	[COMPILE] BEGIN
+;
+
+: LOOP IMMEDIATE
+	' (LOOP) ,
+	[COMPILE] UNTIL
+	' 2RDROP ,		\ Empty return stack
+;

@@ -22,6 +22,8 @@ _KEY					ST			R7,KEY_CB
 KEY_eof					AND			R1,R1,#0			( set KEYSOURCE back to 0 if eof )
 						ST			R1,var_KEYSOURCE	( and we're going to want to read the next key from the keyboard )
 						LD			R0,key_NL
+						NOT			R0,R0
+						ADD			R0,R0,#1
 						BRnzp		KEY_cleanup
 						
 						( we come here if we're reading from keyboard )
