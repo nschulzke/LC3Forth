@@ -7,3 +7,7 @@ bin
 *.lst
 *.obj
 *.sym
+*.lnk
+_LC3Edit.exe.lnk
+_Simulate.exe.lnk
+*.jar
