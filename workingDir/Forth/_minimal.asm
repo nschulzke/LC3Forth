@@ -13,7 +13,6 @@
 
 : LOAD
 	FILELOC KEYSOURCE !
-	1 LOADING !
 ;
 
 : HEADER
@@ -102,4 +101,9 @@
 				' LIT ,			( compile LIT )
 				,				( compile the number )
 			( if we're not in compile mode, we don't need to do anything, the number is on the stack )
+	DELAYED_NL @
+	0BRANCH
+	<#8>
+	10 EMIT
+	0 DELAYED_NL !
 ;
