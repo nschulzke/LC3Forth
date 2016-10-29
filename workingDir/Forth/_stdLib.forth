@@ -102,6 +102,7 @@
 
 #include math.forth
 #include io.forth
+#include math2.forth
 
 : CLEAR
 	S0 DSP!
@@ -136,11 +137,52 @@
 				THEN
 			THEN		\ No else: if we're not compiling, the number is already on the stack
 		THEN
-		DELAYED_NL @
-		IF
-			CR
-			0 DELAYED_NL !
-		THEN
+	AGAIN
+;
+
+: INTERPRET2
+	BEGIN
+		KEYBUFFER					( keybuffer )
+		
+		." load" CR
+		BEGIN
+			KEY SWAP 2DUP 			( key index key index )
+			!						( key index )
+			1+ SWAP					( index+1 key )
+			10 =					( index+1 flag )
+		UNTIL
+		DROP
+		KEYBUFFER KEYSOURCE !
+		
+		BEGIN
+			WORD						( addr len )
+			2DUP						( addr len addr len )
+			FIND						( addr len wordAddr )
+			?DUP IF		\ If we found the word
+				-ROT 2DROP				( wordAddr)
+				DUP ?IMMEDIATE			( wordAddr F_IMMED )
+				STATE @ NOT				( wordAddr F_IMMED notCompiling )
+				OR IF	\ If immediate or executing
+					>CFA EXECUTE		\ execute the words
+				ELSE	\ If not immediate and compiling
+					>CFA ,				\ compile the word
+				THEN
+			ELSE		( addr len ) \ If we didn't find a word
+				NUMBER
+				0= IF					\ if the number was found
+					STATE @ IF			\ if we're compiling
+						' LIT ,			\ compile LIT
+						,				\ compile the number from stack
+					THEN				\ if the number was found, just return it
+				ELSE
+					DROP ." UNKNOWN WORD "
+					LOADING @ IF		\ if we're loading from a file
+						0 LOADING !
+						0 KEYSOURCE !	\ abort so we can see the message
+					THEN
+				THEN
+			THEN
+		UNTIL
 	AGAIN
 ;
 

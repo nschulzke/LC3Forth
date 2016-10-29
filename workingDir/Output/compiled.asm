@@ -401,17 +401,24 @@ _KEY                 ST         R7,KEY_CB
                      LDR        R0,R1,#0
                      BRz        KEY_eof
 
+                     LD         R3,var_LOADING
+                     BRz        KEY_notout
                      OUT        
 
-                     ADD        R1,R1,#1
+KEY_notout           ADD        R1,R1,#1
                      ST         R1,var_KEYSOURCE
                      BRnzp      KEY_cleanup
 
 KEY_eof              AND        R1,R1,#0
                      ST         R1,var_KEYSOURCE
+
+                     LD         R3,var_LOADING
+                     BRz        KEY_cleanup
+
                      LD         R0,key_NL
                      NOT        R0,R0
                      ADD        R0,R0,#1
+
                      BRnzp      KEY_cleanup
 
 
@@ -419,7 +426,7 @@ KEY_board            GETC
 
                      LD         R1,key_NL
                      ADD        R1,R1,R0
-                     BRz        KEY_cleanup_NL
+                     BRz        KEY_out
 
                      LD         R1,key_TAB
                      ADD        R1,R1,R0
@@ -434,27 +441,26 @@ KEY_out              OUT
 KEY_cleanup          LD         R7,KEY_CB
                      RET        
 
-KEY_cleanup_NL       ST         R0,var_DELAYED_NL
-                     LD         R0,key_SPACE
-                     OUT        
-                     LD         R0,var_DELAYED_NL
-                     BRnzp      KEY_cleanup
-
 KEY_CB               .BLKW      1
 key_TAB              .FILL      #-9
 key_NL               .FILL      #-10
 key_PRINTABLE        .FILL      #-32
-key_SPACE            .FILL      #32
-DELAYED_NL
-                     LEA        R0,var_DELAYED_NL
+KEYBUFFER
+                     LEA        R0,_KEYBUFFER
                      JSR        PUSH_R0
                      JSR        NEXT
-var_DELAYED_NL       .FILL      #0
+
+_KEYBUFFER           .BLKW      128
 KEYSOURCE
                      LEA        R0,var_KEYSOURCE
                      JSR        PUSH_R0
                      JSR        NEXT
 var_KEYSOURCE        .FILL      #0
+LOADING
+                     LEA        R0,var_LOADING
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_LOADING          .FILL      #0
 EMIT
                      JSR        POP_R0
                      OUT        
@@ -512,23 +518,12 @@ WORD
 _WORD                ST         R7,WORD_CB
 
 _WORD_start          JSR        _KEY
-
-                     LD         R1,c_NEW_LINE
-                     ADD        R2,R1,R0
-                     BRnp       _WORD_skip_NL
-                     NOT        R0,R1
-                     ADD        R0,R0,#1
-                     OUT        
-                     AND        R1,R1,#0
-                     ST         R1,var_DELAYED_NL
-
-_WORD_skip_NL        LD         R1,c_BACKSLASH
+                     LD         R1,c_BACKSLASH
                      ADD        R2,R1,R0
                      BRz        _WORD_skip_comments
 
                      LEA        R3,_WORD_start
                      JSR        _WORD_check_white
-
                      LD         R1,WORD_buffbot
                      STR        R0,R1,#0
                      ADD        R1,R1,#1
@@ -794,7 +789,7 @@ _F_LENMASK
                      JSR        PUSH_R0
                      JSR        NEXT
 F_LENMASK            .FILL      x1f
-CREATE
+_HEADER
                      JSR        POP_R0
                      JSR        POP_R1
                      LD         R2,var_HERE
@@ -982,9 +977,9 @@ EMPTY_STACK_RET			.BLKW		1
 
 WORD_BUFFER				.BLKW		32
 
-RETURN_STACK			.BLKW		1024
+RETURN_STACK			.BLKW		64
 
-DATA_STACK				.BLKW		1024
+DATA_STACK				.BLKW		512
 
 name_END_OF_DICT     .FILL      #0
 name_RZ              .FILL      name_END_OF_DICT
@@ -1191,15 +1186,19 @@ name_KEY             .FILL      name_DSPSTORE
                      .FILL      #3
                      .STRINGZ   "KEY"
 code_KEY             .FILL      KEY
-name_DELAYED_NL      .FILL      name_KEY
-                     .FILL      #10
-                     .STRINGZ   "DELAYED_NL"
-code_DELAYED_NL      .FILL      DELAYED_NL
-name_KEYSOURCE       .FILL      name_DELAYED_NL
+name_KEYBUFFER       .FILL      name_KEY
+                     .FILL      #9
+                     .STRINGZ   "KEYBUFFER"
+code_KEYBUFFER       .FILL      KEYBUFFER
+name_KEYSOURCE       .FILL      name_KEYBUFFER
                      .FILL      #9
                      .STRINGZ   "KEYSOURCE"
 code_KEYSOURCE       .FILL      KEYSOURCE
-name_EMIT            .FILL      name_KEYSOURCE
+name_LOADING         .FILL      name_KEYSOURCE
+                     .FILL      #7
+                     .STRINGZ   "LOADING"
+code_LOADING         .FILL      LOADING
+name_EMIT            .FILL      name_LOADING
                      .FILL      #4
                      .STRINGZ   "EMIT"
 code_EMIT            .FILL      EMIT
@@ -1259,11 +1258,11 @@ name__F_LENMASK      .FILL      name__F_HIDDEN
                      .FILL      #9
                      .STRINGZ   "F_LENMASK"
 code__F_LENMASK      .FILL      _F_LENMASK
-name_CREATE          .FILL      name__F_LENMASK
-                     .FILL      #6
-                     .STRINGZ   "CREATE"
-code_CREATE          .FILL      CREATE
-name_COMMA           .FILL      name_CREATE
+name__HEADER         .FILL      name__F_LENMASK
+                     .FILL      #8
+                     .STRINGZ   "(HEADER)"
+code__HEADER         .FILL      _HEADER
+name_COMMA           .FILL      name__HEADER
                      .FILL      #1
                      .STRINGZ   ","
 code_COMMA           .FILL      COMMA
@@ -1306,15 +1305,25 @@ code_LOAD            .FILL      DOCOL
                      .FILL      code_FILELOC
                      .FILL      code_KEYSOURCE
                      .FILL      code_STORE
+                     .FILL      code_LIT
+                     .FILL      #1
+                     .FILL      code_LOADING
+                     .FILL      code_STORE
                      .FILL      code_EXIT
-name_colo            .FILL      name_LOAD
+name_HEADER          .FILL      name_LOAD
+                     .FILL      #6
+                     .STRINGZ   "HEADER"
+code_HEADER          .FILL      DOCOL
+                     .FILL      code_WORD
+                     .FILL      code__HEADER
+                     .FILL      code__DOCOL
+                     .FILL      code_COMMA
+                     .FILL      code_EXIT
+name_colo            .FILL      name_HEADER
                      .FILL      #1
                      .STRINGZ   ":"
 code_colo            .FILL      DOCOL
-                     .FILL      code_WORD
-                     .FILL      code_CREATE
-                     .FILL      code__DOCOL
-                     .FILL      code_COMMA
+                     .FILL      code_HEADER
                      .FILL      code_LATEST
                      .FILL      code_FETCH
                      .FILL      code_HIDDEN
@@ -1442,17 +1451,6 @@ code_INTERPRET       .FILL      DOCOL
                      .FILL      code_LIT
                      .FILL      code_COMMA
                      .FILL      code_COMMA
-                     .FILL      code_DELAYED_NL
-                     .FILL      code_FETCH
-                     .FILL      code_ZBRANCH
-                     .FILL      #8
-                     .FILL      code_LIT
-                     .FILL      #10
-                     .FILL      code_EMIT
-                     .FILL      code_LIT
-                     .FILL      #0
-                     .FILL      code_DELAYED_NL
-                     .FILL      code_STORE
                      .FILL      code_EXIT
 name_LATEST          .FILL      name_INTERPRET
                      .FILL      #6

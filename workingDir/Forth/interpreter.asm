@@ -30,23 +30,12 @@
 _WORD					ST			R7,WORD_CB
 
 _WORD_start				JSR			_KEY
-						( make newlines appear as long as it's initial whitespace )
-						LD			R1,c_NEW_LINE
-						ADD			R2,R1,R0	( Check if equal )
-						BRnp		_WORD_skip_NL
-						NOT			R0,R1
-						ADD			R0,R0,#1
-						OUT
-						AND			R1,R1,#0
-						ST			R1,var_DELAYED_NL
-						
-_WORD_skip_NL			LD			R1,c_BACKSLASH
+						LD			R1,c_BACKSLASH
 						ADD			R2,R1,R0	( Check if equal )
 						BRz			_WORD_skip_comments
 						
 						LEA			R3,_WORD_start
 						JSR			_WORD_check_white
-						
 						LD			R1,WORD_buffbot
 						STR			R0,R1,#0
 						ADD			R1,R1,#1

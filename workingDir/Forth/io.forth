@@ -1,7 +1,3 @@
-: DECIMAL 10 BASE ! ;
-: BINARY 2 BASE ! ;
-: HEX 16 BASE ! ;
-
 : '0' [ KEY 0 ] LITERAL ;
 : 'A' [ KEY A ] LITERAL ;
 : '-' [ KEY - ] LITERAL ;
@@ -16,13 +12,13 @@
 24 CONSTANT ROWS
 
 : SPACES
-	BEGIN
-		DUP 0>
-	WHILE
-		SPACE
-		1-
-	REPEAT
-	DROP
+	DUP 0> IF
+		0 DO
+			SPACE
+		LOOP
+	ELSE
+		DROP
+	THEN
 ;
 
 ( u -- )
@@ -61,6 +57,23 @@
 	SPACES
 	U.
 ;
+
+: U.0			( u width )
+	SWAP		( width u )
+	DUP			( width u u )
+	UWIDTH		( width u uwidth )
+	ROT			( u uwidth width )
+	SWAP -		( u width-uwidth ) \ width - uwidth is padding
+	DUP 0> IF
+		0 DO
+			[ KEY 0 ] LITERAL EMIT
+		LOOP
+	ELSE
+		DROP
+	THEN
+	U.
+;
+
 
 : .R			( n width -- )
 	SWAP		( width n )
@@ -130,14 +143,6 @@
 		@			\ jump to previous word
 	REPEAT
 	CR				\ newline to finish
-;
-
-: LOCATE
-	BASE @
-	WORD FIND
-	HEX
-	. CR
-	BASE !
 ;
 
 ( cfa -- addr )
@@ -213,15 +218,53 @@
 	THEN
 ;
 
-( addr len -- )
-: DUMP
-	BASE @ -ROT		( base addr len ) \ so we can get it later
+HEX
+: H.
+	BASE @ SWAP		( base num )
 	HEX
 	
+	DUP 0< IF
+		F			( num mask )
+		BEGIN
+			2DUP		( num mask num mask )
+			AND			( num mask masked )
+			-ROT		( masked num mask )
+			4 LSHIFT	( masked num newmask )
+			DUP 0=
+		UNTIL
+		2DROP
+		
+		C 8 4 0
+		>R >R >R >R
+		
+		( m_0 m_1 m_2 m_3 )
+		BEGIN
+			R> TUCK		( n m n )
+			RSHIFT		( n out )
+			0 U.0
+			0=
+		UNTIL
+		SPACE
+	ELSE
+		4 U.0 SPACE
+	THEN
+	BASE !
+;
+DECIMAL
+
+: LOCATE
+	WORD FIND
+	H. CR
+;
+
+( addr len -- )
+: DUMP
 	BEGIN
 		?DUP		\ while len > 0 )
 	WHILE
-		OVER 4 U.R	\ print address padded to 4
+		CR
+		
+		OVER H.		\ print address padded to 4
 		TAB TAB
 		
 		( hex values, 8 per line )
@@ -232,7 +275,7 @@
 		WHILE
 			SWAP		( addr len linelen addr )
 			DUP @		( addr len linelen addr data )
-			4 .R SPACE	\ print the data
+			H. SPACE	\ print the data
 			1+ SWAP 1-	( addr len linelen addr -- addr len addr+1 linelen-1 )
 		REPEAT
 		DROP			( addr len )
@@ -254,7 +297,6 @@
 			1+ SWAP 1-	( addr len linelen addr -- addr len addr+1 linelen-1 )
 		REPEAT
 		DROP			( addr len )
-		CR
 		
 		DUP 1- 7 AND 1+		( addr len linelen )
 		TUCK				( addr linelen len linelen )
@@ -262,9 +304,6 @@
 		-ROT +				( len-linelen addr+linelen )
 		SWAP				( addr+linelen len-linelen )
 	REPEAT		\ And now we're ready to loop back
-	
-	DROP		( base )
-	BASE !		\ back to how we found it
 ;
 
 : SEE
@@ -282,7 +321,29 @@
 			DUP @		( word curr prev )
 		REPEAT
 		
-		DROP SWAP		( end-of-word start-of-word )
+		DROP			( start-of-word start-of-next )
+		
+		BEGIN
+			2DUP <				\ are we still within range?
+			IF 1 ELSE 0 THEN
+			OVER @ ' EXIT <>		\ still no sign of EXIT?
+			IF 1 ELSE 0 THEN
+			AND
+		WHILE
+			1-			( start-of-word location-1 )
+		REPEAT
+		
+		SWAP		( end-of-word start-of-word )
+		
+		2DUP
+		= IF
+			':' EMIT SPACE
+			DUP ID.	SPACE
+			>CFA @ H.
+			';' EMIT SPACE
+			." PRIMITIVE "
+			DROP EXIT
+		THEN
 		
 		\ start with ": NAME [IMMEDIATE] "
 		':' EMIT SPACE DUP ID. SPACE
@@ -335,9 +396,9 @@
 			ENDCASE
 			1+	( end start+1 )
 		REPEAT
-		';' EMIT CR
+		';' EMIT
 		DROP DROP
 	ELSE
-		." UNKNOWN WORD" CR
+		." UNKNOWN WORD"
 	THEN	\ ends IF found
 ;
