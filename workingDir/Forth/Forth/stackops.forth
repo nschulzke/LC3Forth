@@ -1,3 +1,13 @@
+: CLEAR
+	S0 DSP!
+;
+
+( A B -- B )
+: NIP SWAP DROP ;
+
+( A B -- B A B )
+: TUCK DUP -ROT ;
+
 \ ( -- depth )
 : DEPTH
 	DSP@ S0 -	( depth )

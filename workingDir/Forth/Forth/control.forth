@@ -7,26 +7,26 @@
 
 \ ( BEGIN_addr -- )
 : AGAIN IMMEDIATE
-	' BRANCH ,		\ Set branch
+	POSTPONE BRANCH	\ Set branch
 	HERE @ - ,		\ Offset = BEGIN_addr - AGAIN_addr
 ;
 
 \ ( BEGIN_addr -- )
 : UNTIL IMMEDIATE
-	' 0BRANCH ,		\ Same as AGAIN except conditional
+	POSTPONE 0BRANCH	\ Same as AGAIN except conditional
 	HERE @ - ,
 ;
 
 \ ( BEGIN_addr -- BEGIN_addr WHILE_addr )
 : WHILE IMMEDIATE
-	' 0BRANCH ,		\ Set 0BRANCH
+	POSTPONE 0BRANCH	\ Set 0BRANCH
 	HERE @			\ New offset on stack
 	0 ,				\ Dummy offset
 ;
 
 \ ( BEGIN_addr WHILE_addr -- )
 : REPEAT IMMEDIATE
-	' BRANCH ,		\ Set BRANCH
+	POSTPONE BRANCH	\ Set BRANCH
 	SWAP			\ WHILE_addr BEGIN_addr
 	HERE @ - ,		\ Get offset and compile it ( WHILE_addr )
 	DUP				\ WHILE_addr WHILE_addr
@@ -35,13 +35,13 @@
 ;
 
 : IF IMMEDIATE
-	' 0BRANCH ,
+	POSTPONE 0BRANCH
 	HERE @			\ ifAddress
 	0 ,				\ dummy offset of 0 until told otherwise
 ;
 
 : ELSE IMMEDIATE
-	' BRANCH ,		\ branch around the false
+	POSTPONE BRANCH	\ branch around the false
 	HERE @			\ ifAddress -- ifAddress elseAddress
 	0 ,				\ dummy offset
 	SWAP			\ ifAddress elseAddress -- elseAddress ifAddress
@@ -57,8 +57,8 @@
 ;
 
 : UNLESS IMMEDIATE
-	' NOT ,
-	[COMPILE] IF
+	POSTPONE NOT
+	POSTPONE IF
 ;
 
 \ CASE...ENDCASE is just a big nested IF ELSE THEN
@@ -67,24 +67,24 @@
 ;
 
 : OF IMMEDIATE
-	' OVER ,		\ append OVER
-	' = ,			\ append =
-	[COMPILE] IF	\ append IF
-	' DROP ,		\ append DROP
+	POSTPONE OVER		\ append OVER
+	POSTPONE =			\ append =
+	POSTPONE IF		\ append IF
+	POSTPONE DROP		\ append DROP
 ;
 
 : ENDOF IMMEDIATE
-	[COMPILE] ELSE
+	POSTPONE ELSE
 ;
 
 : ENDCASE IMMEDIATE
-	' DROP ,		\ append DROP to clean up
+	POSTPONE DROP		\ append DROP to clean up
 	
 	\ close all THENs until we get to the zero
 	BEGIN
 		?DUP
 	WHILE
-		[COMPILE] THEN
+		POSTPONE THEN
 	REPEAT
 ;
 
@@ -105,12 +105,12 @@
 ;
 
 : DO IMMEDIATE
-	' (DO) ,
-	[COMPILE] BEGIN
+	POSTPONE (DO)
+	POSTPONE BEGIN
 ;
 
 : LOOP IMMEDIATE
-	' (LOOP) ,
-	[COMPILE] UNTIL
-	' 2RDROP ,		\ Empty return stack
+	POSTPONE (LOOP)
+	POSTPONE UNTIL
+	POSTPONE 2RDROP		\ Empty return stack
 ;

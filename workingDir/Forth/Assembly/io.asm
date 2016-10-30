@@ -1,10 +1,10 @@
-#primitive KEY KEY
+#primitive (KEY) KEYp
 {
-						JSR			_KEY
+						JSR			_KEYp
 						JSR			PUSH_R0
 						JSR			NEXT
-
-_KEY					ST			R7,KEY_CB
+						
+_KEYp					ST			R7,KEYp_CB
 
 						LD			R1,var_KEYSOURCE
 						BRz			KEY_board
@@ -13,27 +13,49 @@ _KEY					ST			R7,KEY_CB
 						LDR			R0,R1,#0
 						BRz			KEY_eof
 						
-						OUT
+						LD			R2,var_KEYECHO
+						BRz			KEY_noecho
+					
+						OUT	( This OUT is only called when we're reading from a file. If we're not reading a file. )
 						
-						ADD			R1,R1,#1
+KEY_noecho				ADD			R1,R1,#1
 						ST			R1,var_KEYSOURCE
-						BRnzp		KEY_cleanup
+						BRnzp		KEYp_cleanup
 						
 KEY_eof					AND			R1,R1,#0			( set KEYSOURCE back to 0 if eof )
 						ST			R1,var_KEYSOURCE	( and we're going to want to read the next key from the keyboard )
 						LD			R0,key_NL
 						NOT			R0,R0
 						ADD			R0,R0,#1
-						BRnzp		KEY_cleanup
+						BRnzp		KEYp_cleanup
 						
 						( we come here if we're reading from keyboard )
 KEY_board				GETC
+
+KEYp_cleanup			LD			R7,KEYp_CB
+						RET
+
+KEYp_CB					.BLKW		1
+}
+#variable KEYECHO KEYECHO <#1>
+#primitive KEY KEY
+{
+						JSR			_KEY
+						JSR			PUSH_R0
+						JSR			NEXT
+						
+_KEY					ST			R7,KEY_CB
+
+						JSR			_KEYp
+						
+						LD			R1,var_KEYSOURCE
+						BRnp		KEY_cleanup
 						
 						LD			R1,key_NL
 						ADD			R1,R1,R0
 						BRz			KEY_cleanup_NL
 						
-						LD			R1,key_TAB
+						LD			R1,key_TAB			( we need to check this so we print tabs instead of ignoring them below )
 						ADD			R1,R1,R0
 						BRz			KEY_out
 						

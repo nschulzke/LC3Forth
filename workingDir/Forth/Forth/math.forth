@@ -2,6 +2,22 @@
 : BINARY 2 BASE ! ;
 : HEX 16 BASE ! ;
 
+( c a b WITHIN returns true if a <= c < b )
+: WITHIN
+	-ROT				( b c a )
+	OVER			( b c a c )
+	<= IF
+		> IF		( b c -- )
+			TRUE
+		ELSE
+			FALSE
+		THEN
+	ELSE
+		DROP DROP	( b c -- )
+		FALSE
+	THEN
+;
+
 : NEGATE 0 SWAP - ;
 
 ( A -- |A| )

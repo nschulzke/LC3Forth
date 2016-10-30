@@ -3,14 +3,14 @@
 RESET					LD			R5,RET_STACK_ADDRESS
 						LD			R4,DATA_STACK_ADDRESS
 												
-						LEA			R6,COLD_START			; R6 holds the address to the next address (%esi equivalent, IP)
+						LD			R6,COLD_START			; R6 holds the address to the next address (%esi equivalent, IP)
 						
 						JSR			NEXT
 
 RET_STACK_ADDRESS		.FILL		RETURN_STACK
 DATA_STACK_ADDRESS		.FILL		DATA_STACK
 
-COLD_START				.FILL		code_QUIT
+COLD_START				.FILL		var_QUITPTR
 						
 DOCOL					JSR			PUSHRSP_R6
 						ADD			R3,R3,#1				; DOCOL is called at codeword in definition, so increment R3 to reach next location
@@ -118,12 +118,17 @@ PUSHRSP_R6				ADD			R5,R5,#1				; Incrememt return stack pointer
 ; END PUSH -->
 
 EMPTY_STACK				LEA			R0,EMPTY_STACK_ERR
-						ST			R7,EMPTY_STACK_RET
-						JSR			PUSHRSP_R6
 						PUTS
-						JSR			RESET
+						
+						ST			R7,EMPTY_STACK_RET
+						AND			R2,R2,#0
+						STI			R2,EMPTY_STACK_KEYSOURCE
+						LD		R0,ABORT_addr
+						JMP		R0
 
-EMPTY_STACK_ERR			.STRINGZ	"STACK UNDERFLOW!\n"
+ABORT_addr				.FILL		RESET
+EMPTY_STACK_KEYSOURCE	.FILL		var_KEYSOURCE
+EMPTY_STACK_ERR			.STRINGZ	"\nStack underflow! "
 
 EMPTY_STACK_RET			.BLKW		1
 

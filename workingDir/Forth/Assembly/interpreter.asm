@@ -10,6 +10,13 @@
 						JSR			PUSH_R0					( Push it on the stack )
 						JSR			NEXT
 }
+#primitive LIT_XT LIT_XT
+{
+						LDR			R0,R6,#0				( Grab the next item to be executed )
+						ADD			R6,R6,#1				( Skip that item )
+						JSR			PUSH_R0					( Push it on the stack )
+						JSR			NEXT
+}
 #primitive LITSTRING LITSTRING
 {
 						LDR			R0,R6,#0				( Grab the length )
@@ -91,22 +98,15 @@ _WORD_check_white		LD			R1,c_TAB
 						
 						LD			R1,c_ESC
 						ADD			R2,R1,R0	( Check if equal )
-						BRz			_WORD_restart
+						BRz			_WORD_start
 						
 						LD			R1,c_BACKSPACE
 						ADD			R2,R1,R0	( Check if equal )
-						BRz			_WORD_restart
+						BRz			_WORD_start
 
 						RET
+						
 _WORD_check_white_l		JMP			R3
-
-_WORD_restart			LD			R0,char_BLOCK
-						OUT
-						LD			R0,c_SPACE
-						NOT			R0,R0
-						ADD			R0,R0,#1
-						OUT
-						BRnzp		_WORD_start
 						
 c_BACKSLASH				.FILL		#-92
 c_TAB					.FILL		#-9
@@ -114,7 +114,6 @@ c_NEW_LINE				.FILL		#-10
 c_SPACE					.FILL		#-32
 c_BACKSPACE				.FILL		#-8
 c_ESC					.FILL		#-27
-char_BLOCK				.FILL		#149
 
 WORD_CB					.BLKW		1
 WORD_buffptr			.FILL		WORD_BUFFER
@@ -299,14 +298,13 @@ _TCFA					AND			R1,R1,#0
 						LEA			R0,const_PARSE_ERROR
 						JSR			PUSH_R0
 						JSR			NEXT
-const_PARSE_ERROR		.STRINGZ	"\nUNKNOWN WORD\n"
+const_PARSE_ERROR		.STRINGZ	"\nUNKNOWN WORD"
 }
 #primitive EXECUTE EXECUTE
 {
 						JSR			POP_R3
 						LDR			R2,R3,#0		( Load data at address -- this holds the next codeword )
 						JMP			R2				( jump there -- NEXT will work from that point )
-EXECUTE_target			.BLKW		1
 }
 #primitive F_IMMED _F_IMMED
 {
@@ -378,13 +376,6 @@ _COMMA					LD			R1,var_HERE
 						AND			R0,R0,#0
 						ADD			R0,R0,#1
 						ST			R0,var_STATE
-						JSR			NEXT
-}
-#primitive ' TICK
-{
-						LDR			R0,R6,#0		( Grab the next address )
-						ADD			R6,R6,#1		( Skip that address )
-						JSR			PUSH_R0			( Push the address on the stack )
 						JSR			NEXT
 }
 #primitive BRANCH BRANCH

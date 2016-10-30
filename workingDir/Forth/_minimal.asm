@@ -1,13 +1,13 @@
-#include constants.asm
+#include Assembly\constants.asm
 
-#include stackops.asm
-#include math.asm
+#include Assembly\stackops.asm
+#include Assembly\math.asm
 
-#include memory.asm
-#include io.asm
+#include Assembly\memory.asm
+#include Assembly\io.asm
 
-#include interpreter.asm
-#include variables.asm
+#include Assembly\interpreter.asm
+#include Assembly\variables.asm
 
 #binary _stdLib.forth
 
@@ -29,7 +29,7 @@
 
 : <;> IMMEDIATE
 	[
-	' EXIT ,
+	LIT_XT EXIT ,
 	LATEST @
 	HIDDEN
 ;
@@ -51,6 +51,8 @@
 ;
 
 : QUIT
+	10 EMIT
+	0 DELAYED_NL !
 	R0 RSP!
 	INTERPRET
 	BRANCH
@@ -98,7 +100,7 @@
 			STATE @
 			0BRANCH				( branch if not in compile mode )
 			<#5>
-				' LIT ,			( compile LIT )
+				LIT_XT LIT ,		( compile LIT )
 				,				( compile the number )
 			( if we're not in compile mode, we don't need to do anything, the number is on the stack )
 	DELAYED_NL @
