@@ -11,6 +11,13 @@
 
 #binary _stdLib.forth
 
+: \ IMMEDIATE
+	INPUT
+	10 = ( repeat until NL )
+	0BRANCH
+	<#-5>
+;
+
 : LOAD
 	FILELOC KEYSOURCE !
 ;

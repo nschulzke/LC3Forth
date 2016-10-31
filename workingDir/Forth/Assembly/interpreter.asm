@@ -36,7 +36,7 @@
 												
 _WORD					ST			R7,WORD_CB
 
-_WORD_start				JSR			_KEY
+_WORD_start				JSR			_INPUT
 						( make newlines appear as long as it's initial whitespace )
 						LD			R1,c_NEW_LINE
 						ADD			R2,R1,R0	( Check if equal )
@@ -47,11 +47,7 @@ _WORD_start				JSR			_KEY
 						AND			R1,R1,#0
 						ST			R1,var_DELAYED_NL
 						
-_WORD_skip_NL			LD			R1,c_BACKSLASH
-						ADD			R2,R1,R0	( Check if equal )
-						BRz			_WORD_skip_comments
-						
-						LEA			R3,_WORD_start
+_WORD_skip_NL			LEA			R3,_WORD_start
 						JSR			_WORD_check_white
 						
 						LD			R1,WORD_buffbot
@@ -59,7 +55,7 @@ _WORD_skip_NL			LD			R1,c_BACKSLASH
 						ADD			R1,R1,#1
 						ST			R1,WORD_buffptr
 	
-_WORD_search			JSR			_KEY
+_WORD_search			JSR			_INPUT
 						LEA			R3,_WORD_cleanup
 						JSR			_WORD_check_white
 						LD			R1,WORD_buffptr
@@ -77,12 +73,6 @@ _WORD_cleanup			LD			R2,WORD_buffbot
 						ADD			R2,R2,#1
 						LD			R7,WORD_CB
 						RET
-						
-_WORD_skip_comments		JSR			_KEY
-						LD			R1,c_NEW_LINE
-						ADD			R2,R1,R0	( Check if equal )
-						BRnp		_WORD_skip_comments
-						BRzp		_WORD_start
 						
 _WORD_check_white		LD			R1,c_TAB
 						ADD			R2,R1,R0	( Check if equal )

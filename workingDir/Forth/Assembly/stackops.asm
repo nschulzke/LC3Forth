@@ -69,3 +69,9 @@ QDUP_skip				JSR			NEXT
 						JSR			PUSH_R3
 						JSR			NEXT
 }
+#primitive R@ RFETCH
+{
+						LDR			R0,R5,#0
+						JSR			PUSH_R0
+						JSR			NEXT
+}

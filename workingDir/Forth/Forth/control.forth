@@ -1,4 +1,4 @@
-: TRUE 1 ;
+: TRUE -1 ;
 : FALSE 0 ;
 : NOT 0= ;
 
@@ -96,12 +96,12 @@
 ;
 
 : (LOOP)
-	R>				\ ( pointer | limit index )
-	2R>				\ ( pointer limit index | )
+	R>				\ ( pointer ) ( return: limit index )
+	2R>				\ ( pointer limit index )
 	1+ 2DUP 		\ ( pointer limit index limit index )
 	<=				\ ( pointer limit index flag )
-	-ROT 2>R		\ ( pointer flag | limit index )
-	SWAP >R			\ ( flag | limit index pointer )
+	-ROT 2>R		\ ( pointer flag ) ( return: limit index )
+	SWAP >R			\ ( flag ) ( return limit index pointer )
 ;
 
 : DO IMMEDIATE

@@ -1,11 +1,10 @@
+
 : FORGET
 	WORD FIND			\ find the word
-	DUP 0= UNLESS
-		DUP @ LATEST !	\ make LATEST point to the word above it
-		HERE !			\ and move our current data up to that point
-	ELSE
-		DROP
-	THEN
+	?DUP 0= ABORT" Couldn't find word"
+	
+	DUP @ LATEST !	\ make LATEST point to the word above it
+	HERE !			\ and move our current data up to that point
 ;
 
 : BOUNDS
@@ -50,7 +49,7 @@
 			DUP @ CFA> ID. SPACE
 		ENDOF
 		['] LITSTRING OF
-			[CHAR] S LITERAL EMIT '"' EMIT SPACE \ print 'S" '
+			[CHAR] S EMIT '"' EMIT SPACE \ print 'S" '
 			1+ DUP @		( end lenAddr len )
 			SWAP 1+ SWAP	( end addr len )
 			2DUP TELL		\ print the string

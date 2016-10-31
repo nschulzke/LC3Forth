@@ -1,11 +1,7 @@
-: [CHAR] IMMEDIATE KEY ;
-: '0' [CHAR] 0 LITERAL ;
-: 'A' [CHAR] A LITERAL ;
-: '-' [CHAR] - LITERAL ;
-: '"' [CHAR] " LITERAL ;
-: ':' [CHAR] : LITERAL ;
-: ';' [CHAR] ; LITERAL ;
-: '.' [CHAR] . LITERAL ;
+: [CHAR] IMMEDIATE INPUT POSTPONE LITERAL ;
+: '"' [CHAR] " ;
+: ':' [CHAR] : ;
+: ';' [CHAR] ; ;
 10 CONSTANT NL
 9 CONSTANT TB
 32 CONSTANT BL
@@ -42,10 +38,10 @@
 	
 	\ print the remainder
 	DUP 10 < IF		\ if less than 10, then digits
-		'0'
+		[CHAR] 0
 	ELSE
 		10 -
-		'A'
+		[CHAR] A
 	THEN
 	+
 	EMIT
@@ -78,7 +74,7 @@
 	SWAP -		( u width-uwidth ) \ width - uwidth is padding
 	DUP 0> IF
 		0 DO
-			[CHAR] 0 LITERAL EMIT
+			[CHAR] 0 EMIT
 		LOOP
 	ELSE
 		DROP
@@ -109,7 +105,7 @@
 	SWAP		( u flag )
 	
 	IF
-		'-' EMIT
+		[CHAR] - EMIT
 	THEN
 	
 	U.
@@ -191,7 +187,7 @@
 		HERE @				( addr )
 		0 ,					\ we don't yet know length, dummy value
 		BEGIN
-			KEY				\ next char
+			INPUT			\ next char
 			DUP '"'	
 		<> WHILE			\ as long as not close quote, continue
 			,				\ compile character
@@ -204,7 +200,7 @@
 	ELSE
 		HERE @				( addr )
 		BEGIN
-			KEY				\ same as above
+			INPUT			\ same as above
 			DUP '"'
 		<> WHILE
 			OVER !			\ store char @ addr
@@ -225,6 +221,20 @@
 		SPACE
 		TELL			\ print out the string
 	THEN
+;
+
+: ABORT
+	S0 DSP!
+	QUITPTR @ EXECUTE
+;
+
+: ABORT" IMMEDIATE
+	POSTPONE IF
+	POSTPONE CR
+	POSTPONE ."
+	POSTPONE SPACE
+	POSTPONE ABORT
+	POSTPONE THEN
 ;
 
 HEX
@@ -301,7 +311,7 @@ DECIMAL
 			DUP 32 128 WITHIN IF		( 32 <= char < 128? )
 				EMIT
 			ELSE
-				DROP '.' EMIT
+				DROP [CHAR] . EMIT
 			THEN
 			1+ SWAP 1-	( addr len linelen addr -- addr len addr+1 linelen-1 )
 		REPEAT

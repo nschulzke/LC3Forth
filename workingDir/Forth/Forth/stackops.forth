@@ -13,12 +13,12 @@
 	DSP@ S0 -	( depth )
 ;
 
-\ ( a b -- a b a b )
+\ ( d1 -- d1 d1 )
 : 2DUP
 	OVER OVER
 ;
 
-\ ( a b -- )
+\ ( d1 -- )
 : 2DROP
 	DROP DROP
 ;
@@ -43,4 +43,14 @@
 	2R>				\ ( pointer a b )
 	2DROP			\ ( pointer )
 	>R
+;
+
+\ ( d1 d2 -- d2 d1 )
+: 2SWAP
+	>R -ROT R> -ROT
+;
+
+\ ( d1 d2 -- d1 d2 d1 )
+: 2OVER
+	2>R 2DUP 2R> 2SWAP
 ;

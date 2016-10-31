@@ -1,21 +1,15 @@
 VARIABLE KEYBUFFER 127 ALLOT
 
-: ABORT
-	S0 DSP!
-	QUITPTR @ EXECUTE
+: SOURCE
+	KEYBUFFER
+	128	
 ;
 
-: ABORT" IMMEDIATE
-	POSTPONE IF
-	POSTPONE ."
-	POSTPONE SPACE
-	POSTPONE ABORT
-	POSTPONE THEN
-;
-
-: READLINE
+( addr maxlen )
+: ACCEPT
 	0 KEYSOURCE !
-	KEYBUFFER			( addr )
+	DROP				( addr )
+	\ We wont use the length: the spec says not to terminate when we reach it anyway...
 	BEGIN
 		KEY				( addr key )
 		DUP 8 = IF		\ backspace functionality
@@ -27,6 +21,9 @@ VARIABLE KEYBUFFER 127 ALLOT
 			THEN
 			SWAP				( addr-1 key )
 		ELSE
+			DUP NL = UNLESS
+				DUP EMIT
+			ELSE SPACE THEN
 			2DUP SWAP !		( addr key )
 			SWAP 1+ SWAP 	( addr+1 key )
 		THEN
@@ -96,9 +93,9 @@ HIDE QUIT
 	[ LATEST @
 	>CFA QUITPTR ! ]
 	BEGIN
-		CR ." ~ "
+		CR ." > "
 		R0 RSP!
-		READLINE
+		SOURCE ACCEPT
 		KEYBUFFER KEYSOURCE !
 		INTERPRET
 		SPACE ." ok "

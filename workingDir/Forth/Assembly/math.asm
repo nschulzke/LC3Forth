@@ -49,7 +49,7 @@
 						STR			R0,R4,#0
 						JSR			NEXT
 }
-#primitive NOTB NOTF
+#primitive INVERT INVERT
 {
 						LDR			R0,R4,#0
 						NOT			R0,R0
@@ -57,10 +57,10 @@
 						JSR			NEXT
 }
 : NOR
-	OR NOTB
+	OR INVERT
 ;
 : NAND
-	AND NOTB
+	AND INVERT
 ;
 : XOR
 	OVER OVER	( A B A B )
@@ -70,7 +70,7 @@
 	AND			( AND[OR[A,B],NAND[A,B]] )
 ;
 : XNOR
-	XOR NOTB
+	XOR INVERT
 ;
 #primitive = EQUAL
 {
@@ -226,6 +226,49 @@ ZGTE_false				AND			R0,R0,#0				( If false, set flag to 0 )
 ZGTE_finish				JSR			PUSH_R0
 						JSR			NEXT
 }
+#primitive * MULT
+{
+						JSR		POP_R2
+						JSR		POP_R1
+						JSR		_MULTIPLY
+						JSR		PUSH_R3
+						JSR		NEXT
+
+_MULTIPLY				ST		R7,MULT_CB
+
+						AND		R0,R0,#0				( Initialize our scratch )
+		
+						JSR		SIGN_LOGIC
+						ST		R3,MULT_SIGN
+
+						NOT		R3,R1					( Check R1 )
+						NOT		R3,R3
+						BRz		MULT_ZERO				( Return 0 if 0 )
+						NOT		R3,R2					( Check R2 )
+						NOT		R3,R3
+						BRz		MULT_ZERO				( Return 0 if 0 )
+						
+						AND		R3,R3,#0				( Initialize our return register )
+
+						ADD		R0,R0,R1				( Set R0 to equal R1, this will be our counter )
+MULT_LOOP				ADD		R3,R3,R2				( Add to return value )
+						ADD		R0,R0,#-1				( Decrement counter )
+						BRp		MULT_LOOP				( Loop back until zero )
+
+						LD		R0,MULT_SIGN
+						BRp		MULT_CLEANUP
+						NOT		R3,R3
+						ADD		R3,R3,#1
+
+MULT_CLEANUP			LD		R7,MULT_CB
+						RET
+
+MULT_ZERO				AND		R3,R3,#0
+						BRnzp	MULT_CLEANUP
+
+MULT_CB					.BLKW	1
+MULT_SIGN				.BLKW	1
+}
 #primitive /MOD DIVMOD
 {
 					JSR		POP_R2
@@ -276,7 +319,7 @@ DIV_ZERO_RETURN		AND		R0,R0,#0
 
 DIV_ZERO_ERROR		LEA		R0,DIV_ZERO_ERR_MSG
 					PUTS
-					BRnzp	RESET
+					JSR		RESET
 DIV_ZERO_ERR_MSG	.STRINGZ "\nDivide by zero error! "
 
 DIV_R0			.BLKW	1

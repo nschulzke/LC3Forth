@@ -80,6 +80,10 @@ FROMR
                      JSR        POPRSP_R3
                      JSR        PUSH_R3
                      JSR        NEXT
+RFETCH
+                     LDR        R0,R5,#0
+                     JSR        PUSH_R0
+                     JSR        NEXT
 INCR
                      LDR        R0,R4,#0
                      ADD        R0,R0,#1
@@ -119,7 +123,7 @@ OR
                      NOT        R0,R0
                      STR        R0,R4,#0
                      JSR        NEXT
-NOTF
+INVERT
                      LDR        R0,R4,#0
                      NOT        R0,R0
                      STR        R0,R4,#0
@@ -254,6 +258,47 @@ ZGTE
 ZGTE_false           AND        R0,R0,#0
 ZGTE_finish          JSR        PUSH_R0
                      JSR        NEXT
+MULT
+                     JSR        POP_R2
+                     JSR        POP_R1
+                     JSR        _MULTIPLY
+                     JSR        PUSH_R3
+                     JSR        NEXT
+
+_MULTIPLY            ST         R7,MULT_CB
+
+                     AND        R0,R0,#0
+
+                     JSR        SIGN_LOGIC
+                     ST         R3,MULT_SIGN
+
+                     NOT        R3,R1
+                     NOT        R3,R3
+                     BRz        MULT_ZERO
+                     NOT        R3,R2
+                     NOT        R3,R3
+                     BRz        MULT_ZERO
+
+                     AND        R3,R3,#0
+
+                     ADD        R0,R0,R1
+MULT_LOOP            ADD        R3,R3,R2
+                     ADD        R0,R0,#-1
+                     BRp        MULT_LOOP
+
+                     LD         R0,MULT_SIGN
+                     BRp        MULT_CLEANUP
+                     NOT        R3,R3
+                     ADD        R3,R3,#1
+
+MULT_CLEANUP         LD         R7,MULT_CB
+                     RET        
+
+MULT_ZERO            AND        R3,R3,#0
+                     BRnzp      MULT_CLEANUP
+
+MULT_CB              .BLKW      1
+MULT_SIGN            .BLKW      1
 DIVMOD
                      JSR        POP_R2
                      JSR        POP_R1
@@ -303,7 +348,7 @@ DIV_ZERO_RETURN      AND        R0,R0,#0
 
 DIV_ZERO_ERROR       LEA        R0,DIV_ZERO_ERR_MSG
                      PUTS       
-                     BRnzp      RESET
+                     JSR        RESET
 DIV_ZERO_ERR_MSG     .STRINGZ   "\nDivide by zero error! "
 
 DIV_R0               .BLKW      1
@@ -387,87 +432,103 @@ DSPSTORE
                      AND        R4,R4,#0
                      ADD        R4,R4,R0
                      JSR        NEXT
-KEYp
-                     JSR        _KEYp
-                     JSR        PUSH_R0
-                     JSR        NEXT
-
-_KEYp                ST         R7,KEYp_CB
-
-                     LD         R1,var_KEYSOURCE
-                     BRz        KEY_board
-
-
-                     LDR        R0,R1,#0
-                     BRz        KEY_eof
-
-                     LD         R2,var_KEYECHO
-                     BRz        KEY_noecho
-
-                     OUT        
-
-KEY_noecho           ADD        R1,R1,#1
-                     ST         R1,var_KEYSOURCE
-                     BRnzp      KEYp_cleanup
-
-KEY_eof              AND        R1,R1,#0
-                     ST         R1,var_KEYSOURCE
-                     LD         R0,key_NL
-                     NOT        R0,R0
-                     ADD        R0,R0,#1
-                     BRnzp      KEYp_cleanup
-
-
-KEY_board            GETC       
-
-KEYp_cleanup         LD         R7,KEYp_CB
-                     RET        
-
-KEYp_CB              .BLKW      1
-KEYECHO
-                     LEA        R0,var_KEYECHO
-                     JSR        PUSH_R0
-                     JSR        NEXT
-var_KEYECHO          .FILL      #1
 KEY
                      JSR        _KEY
                      JSR        PUSH_R0
                      JSR        NEXT
 
 _KEY                 ST         R7,KEY_CB
+                     ST         R1,KEY_R1
+                     ST         R2,KEY_R2
 
-                     JSR        _KEYp
+_KEY_loop            GETC       
+                     JSR        _VALID_CHAR
+                     AND        R2,R2,R2
+                     BRnp       _KEY_loop
 
-                     LD         R1,var_KEYSOURCE
-                     BRnp       KEY_cleanup
+                     LD         R7,KEY_CB
+                     LD         R1,KEY_R1
+                     LD         R2,KEY_R2
+                     RET        
 
-                     LD         R1,key_NL
-                     ADD        R1,R1,R0
-                     BRz        KEY_cleanup_NL
+_VALID_CHAR                     
 
-                     LD         R1,key_TAB
-                     ADD        R1,R1,R0
-                     BRz        KEY_out
+                     AND        R2,R2,#0
 
                      LD         R1,key_PRINTABLE
                      ADD        R1,R1,R0
-                     BRn        KEY_cleanup
+                     BRzp       _V_CH_cleanup
 
-KEY_out              OUT        
+                     LD         R1,key_BKSPC
+                     ADD        R1,R1,R0
+                     BRn        _V_CH_badchar
 
-KEY_cleanup          LD         R7,KEY_CB
+                     LD         R1,key_NL
+                     ADD        R1,R1,R0
+                     BRnz       _V_CH_cleanup
+
+_V_CH_badchar        ADD        R2,R2,#1
+_V_CH_cleanup        RET        
+
+key_BKSPC            .FILL      #-8
+key_NL               .FILL      #-10
+key_PRINTABLE        .FILL      #-32
+KEY_CB               .BLKW      1
+KEY_R1               .BLKW      1
+KEY_R2               .BLKW      1
+KEYECHO
+                     LEA        R0,var_KEYECHO
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_KEYECHO          .FILL      #1
+INPUT
+                     JSR        _INPUT
+                     JSR        PUSH_R0
+                     JSR        NEXT
+
+_INPUT               ST         R7,INPUT_CB
+
+                     LD         R1,var_KEYSOURCE
+                     BRnp       INPUT_file
+
+                     JSR        _KEY
+
+                     LD         R1,key_NL
+                     ADD        R1,R1,R0
+                     BRz        INPUT_cleanup_NL
+
+                     OUT        
+
+INPUT_cleanup        LD         R7,INPUT_CB
                      RET        
 
-KEY_cleanup_NL       ST         R0,var_DELAYED_NL
+INPUT_cleanup_NL     ST         R0,var_DELAYED_NL
                      LD         R0,key_SPACE
                      OUT        
                      LD         R0,var_DELAYED_NL
-                     BRnzp      KEY_cleanup
+                     BRnzp      INPUT_cleanup
 
-KEY_CB               .BLKW      1
-key_TAB              .FILL      #-9
-key_NL               .FILL      #-10
-key_PRINTABLE        .FILL      #-32
+
+INPUT_file           LDR        R0,R1,#0
+                     BRz        INPUT_eof
+
+                     LD         R2,var_KEYECHO
+                     BRz        INPUT_noecho
+
+                     OUT        
+
+INPUT_noecho         ADD        R1,R1,#1
+                     ST         R1,var_KEYSOURCE
+                     BRnzp      INPUT_cleanup
+
+INPUT_eof            AND        R1,R1,#0
+                     ST         R1,var_KEYSOURCE
+                     LD         R0,key_NL
+                     NOT        R0,R0
+                     ADD        R0,R0,#1
+                     BRnzp      INPUT_cleanup
+
+INPUT_CB             .BLKW      1
 key_SPACE            .FILL      #32
 DELAYED_NL
                      LEA        R0,var_DELAYED_NL
@@ -487,7 +548,7 @@ EMITS
                      JSR        POP_R0
                      PUTS       
                      JSR        NEXT
-DOTB
+BDOT
                      JSR        POP_R1
                      AND        R3,R3,#0
                      ADD        R3,R3,#1
@@ -540,7 +601,7 @@ WORD
 
 _WORD                ST         R7,WORD_CB
 
-_WORD_start          JSR        _KEY
+_WORD_start          JSR        _INPUT
 
                      LD         R1,c_NEW_LINE
                      ADD        R2,R1,R0
@@ -551,11 +612,7 @@ _WORD_start          JSR        _KEY
                      AND        R1,R1,#0
                      ST         R1,var_DELAYED_NL
 
-_WORD_skip_NL        LD         R1,c_BACKSLASH
-                     ADD        R2,R1,R0
-                     BRz        _WORD_skip_comments
-
-                     LEA        R3,_WORD_start
+_WORD_skip_NL        LEA        R3,_WORD_start
                      JSR        _WORD_check_white
 
                      LD         R1,WORD_buffbot
@@ -563,7 +620,7 @@ _WORD_skip_NL        LD         R1,c_BACKSLASH
                      ADD        R1,R1,#1
                      ST         R1,WORD_buffptr
 
-_WORD_search         JSR        _KEY
+_WORD_search         JSR        _INPUT
                      LEA        R3,_WORD_cleanup
                      JSR        _WORD_check_white
                      LD         R1,WORD_buffptr
@@ -581,12 +638,6 @@ _WORD_cleanup        LD         R2,WORD_buffbot
                      ADD        R2,R2,#1
                      LD         R7,WORD_CB
                      RET        
-
-_WORD_skip_comments  JSR        _KEY
-                     LD         R1,c_NEW_LINE
-                     ADD        R2,R1,R0
-                     BRnp       _WORD_skip_comments
-                     BRzp       _WORD_start
 
 _WORD_check_white    LD         R1,c_TAB
                      ADD        R2,R1,R0
@@ -991,9 +1042,8 @@ PUSHRSP_R6				ADD			R5,R5,#1				; Incrememt return stack pointer
 ; END PUSH -->
 
 EMPTY_STACK				LEA			R0,EMPTY_STACK_ERR
-						PUTS
-						
 						ST			R7,EMPTY_STACK_RET
+						PUTS
 						AND			R2,R2,#0
 						STI			R2,EMPTY_STACK_KEYSOURCE
 						LD		R0,ABORT_addr
@@ -1064,7 +1114,11 @@ name_FROMR           .FILL      name_TOR
                      .FILL      #2
                      .STRINGZ   "R>"
 code_FROMR           .FILL      FROMR
-name_INCR            .FILL      name_FROMR
+name_RFETCH          .FILL      name_FROMR
+                     .FILL      #2
+                     .STRINGZ   "R@"
+code_RFETCH          .FILL      RFETCH
+name_INCR            .FILL      name_RFETCH
                      .FILL      #2
                      .STRINGZ   "1+"
 code_INCR            .FILL      INCR
@@ -1088,23 +1142,23 @@ name_OR              .FILL      name_ANDF
                      .FILL      #2
                      .STRINGZ   "OR"
 code_OR              .FILL      OR
-name_NOTF            .FILL      name_OR
-                     .FILL      #4
-                     .STRINGZ   "NOTB"
-code_NOTF            .FILL      NOTF
-name_NOR             .FILL      name_NOTF
+name_INVERT          .FILL      name_OR
+                     .FILL      #6
+                     .STRINGZ   "INVERT"
+code_INVERT          .FILL      INVERT
+name_NOR             .FILL      name_INVERT
                      .FILL      #3
                      .STRINGZ   "NOR"
 code_NOR             .FILL      DOCOL
                      .FILL      code_OR
-                     .FILL      code_NOTF
+                     .FILL      code_INVERT
                      .FILL      code_EXIT
 name_NAND            .FILL      name_NOR
                      .FILL      #4
                      .STRINGZ   "NAND"
 code_NAND            .FILL      DOCOL
                      .FILL      code_ANDF
-                     .FILL      code_NOTF
+                     .FILL      code_INVERT
                      .FILL      code_EXIT
 name_XOR             .FILL      name_NAND
                      .FILL      #3
@@ -1122,7 +1176,7 @@ name_XNOR            .FILL      name_XOR
                      .STRINGZ   "XNOR"
 code_XNOR            .FILL      DOCOL
                      .FILL      code_XOR
-                     .FILL      code_NOTF
+                     .FILL      code_INVERT
                      .FILL      code_EXIT
 name_EQUAL           .FILL      name_XNOR
                      .FILL      #1
@@ -1172,7 +1226,11 @@ name_ZGTE            .FILL      name_ZLTE
                      .FILL      #3
                      .STRINGZ   "0>="
 code_ZGTE            .FILL      ZGTE
-name_DIVMOD          .FILL      name_ZGTE
+name_MULT            .FILL      name_ZGTE
+                     .FILL      #1
+                     .STRINGZ   "*"
+code_MULT            .FILL      MULT
+name_DIVMOD          .FILL      name_MULT
                      .FILL      #4
                      .STRINGZ   "/MOD"
 code_DIVMOD          .FILL      DIVMOD
@@ -1212,19 +1270,19 @@ name_DSPSTORE        .FILL      name_DSPFETCH
                      .FILL      #4
                      .STRINGZ   "DSP!"
 code_DSPSTORE        .FILL      DSPSTORE
-name_KEYp            .FILL      name_DSPSTORE
-                     .FILL      #5
-                     .STRINGZ   "(KEY)"
-code_KEYp            .FILL      KEYp
-name_KEYECHO         .FILL      name_KEYp
-                     .FILL      #7
-                     .STRINGZ   "KEYECHO"
-code_KEYECHO         .FILL      KEYECHO
-name_KEY             .FILL      name_KEYECHO
+name_KEY             .FILL      name_DSPSTORE
                      .FILL      #3
                      .STRINGZ   "KEY"
 code_KEY             .FILL      KEY
-name_DELAYED_NL      .FILL      name_KEY
+name_KEYECHO         .FILL      name_KEY
+                     .FILL      #7
+                     .STRINGZ   "KEYECHO"
+code_KEYECHO         .FILL      KEYECHO
+name_INPUT           .FILL      name_KEYECHO
+                     .FILL      #5
+                     .STRINGZ   "INPUT"
+code_INPUT           .FILL      INPUT
+name_DELAYED_NL      .FILL      name_INPUT
                      .FILL      #10
                      .STRINGZ   "DELAYED_NL"
 code_DELAYED_NL      .FILL      DELAYED_NL
@@ -1240,11 +1298,11 @@ name_EMITS           .FILL      name_EMIT
                      .FILL      #5
                      .STRINGZ   "EMITS"
 code_EMITS           .FILL      EMITS
-name_DOTB            .FILL      name_EMITS
+name_BDOT            .FILL      name_EMITS
                      .FILL      #2
-                     .STRINGZ   ".B"
-code_DOTB            .FILL      DOTB
-name_EXIT            .FILL      name_DOTB
+                     .STRINGZ   "B."
+code_BDOT            .FILL      BDOT
+name_EXIT            .FILL      name_BDOT
                      .FILL      #4
                      .STRINGZ   "EXIT"
 code_EXIT            .FILL      EXIT
@@ -1336,7 +1394,18 @@ name_QUITPTR         .FILL      name_HERE
                      .FILL      #7
                      .STRINGZ   "QUITPTR"
 code_QUITPTR         .FILL      QUITPTR
-name_LOAD            .FILL      name_QUITPTR
+name_whac            .FILL      name_QUITPTR
+                     .FILL      #129
+                     .STRINGZ   "\\"
+code_whac            .FILL      DOCOL
+                     .FILL      code_INPUT
+                     .FILL      code_LIT
+                     .FILL      #10
+                     .FILL      code_EQUAL
+                     .FILL      code_ZBRANCH
+                     .FILL      #-5
+                     .FILL      code_EXIT
+name_LOAD            .FILL      name_whac
                      .FILL      #4
                      .STRINGZ   "LOAD"
 code_LOAD            .FILL      DOCOL

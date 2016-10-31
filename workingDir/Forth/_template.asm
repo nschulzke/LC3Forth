@@ -118,9 +118,8 @@ PUSHRSP_R6				ADD			R5,R5,#1				; Incrememt return stack pointer
 ; END PUSH -->
 
 EMPTY_STACK				LEA			R0,EMPTY_STACK_ERR
-						PUTS
-						
 						ST			R7,EMPTY_STACK_RET
+						PUTS
 						AND			R2,R2,#0
 						STI			R2,EMPTY_STACK_KEYSOURCE
 						LD		R0,ABORT_addr

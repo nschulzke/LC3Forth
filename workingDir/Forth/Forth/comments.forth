@@ -1,15 +1,14 @@
-: '(' [ KEY ( ] LITERAL ;
-: ')' [ KEY ) ] LITERAL ;
-
 : ( IMMEDIATE
 	1					\ allowed nested parens by keeping track of depth
 	BEGIN
-		KEY				\ read next character
-		DUP '(' = IF	\ open paren?
+		INPUT				\ read next character
+		DUP [ INPUT ( ] LITERAL
+			= IF	\ open paren?
 			DROP		\ drop the open paren
 			1+			\ depth increases
 		ELSE
-			')' = IF	\ close paren?
+			[ INPUT ) ] LITERAL
+			= IF	\ close paren?
 				1-		\ depth decreases
 			THEN
 		THEN
