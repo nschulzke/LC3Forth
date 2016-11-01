@@ -26,6 +26,7 @@
 		SPACE
 		1-
 	REPEAT
+	DROP
 ;
 
 ( u -- )
@@ -78,6 +79,7 @@
 		[CHAR] 0 EMIT
 		1-
 	REPEAT
+	DROP
 	U.
 ;
 
@@ -117,8 +119,6 @@
 : .S
 	DSP@ S0			( dsp S0<addr> )
 	BEGIN
-		2DUP HEX U. U. DECIMAL
-		KEY DROP
 		2DUP >		( dsp addr dsp>addr )
 	WHILE
 		1+			( dsp addr+1 )
@@ -167,6 +167,8 @@
 		THEN
 		@			( back up )
 	REPEAT
+	DROP			( cfa curr -- cfa )
+	0				( cfa -- cfa 0 )
 ;
 
 ( addr len -- )
