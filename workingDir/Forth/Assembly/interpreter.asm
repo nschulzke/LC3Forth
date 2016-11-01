@@ -325,30 +325,29 @@ F_HIDDEN				.FILL		x20
 						JSR			NEXT
 F_LENMASK				.FILL		x1f
 }
-#primitive (HEADER) _HEADER
+#primitive HEADER _HEADER
 {
-						JSR			POP_R0				( length of name )
-						JSR			POP_R1				( address of name )
-						LD			R2,var_HERE			( address of header )
+						JSR			_WORD
+						LD			R0,var_HERE			( address of header )
 						LD			R3,var_LATEST		( link pointer )
-						STR			R3,R2,#0			( store link at head )
-						ADD			R2,R2,#1			( increment pointer )
-						STR			R0,R2,#0			( store the length )
-						ADD			R2,R2,#1			( increment pointer )
+						STR			R3,R0,#0			( store link at head )
+						ADD			R0,R0,#1			( increment pointer )
+						STR			R1,R0,#0			( store the length )
+						ADD			R0,R0,#1			( increment pointer )
 						
-_CREATE_copy_loop		LDR			R3,R1,#0			( load the char )
-						STR			R3,R2,#0			( store it )
-						ADD			R2,R2,#1			( increment destination pointer )
-						ADD			R1,R1,#1			( increment source pointer )
-						ADD			R0,R0,#-1			( and count down )
+_CREATE_copy_loop		LDR			R3,R2,#0			( load the char )
+						STR			R3,R0,#0			( store it )
+						ADD			R0,R0,#1			( increment destination pointer )
+						ADD			R2,R2,#1			( increment source pointer )
+						ADD			R1,R1,#-1			( and count down )
 						BRp			_CREATE_copy_loop	( loop until zero )
 						
-						STR			R0,R2,#0			( store 0 [null-terminator] )
-						ADD			R2,R2,#1			( increment destination pointer )
+						STR			R1,R0,#0			( store 0 [null-terminator] )
+						ADD			R0,R0,#1			( increment destination pointer )
 						
-						LD			R0,var_HERE			( var_HERE is where we started making this definition )
-						ST			R0,var_LATEST		( so make var_LATEST point there )
-						ST			R2,var_HERE			( and make var_HERE point to the end )
+						LD			R1,var_HERE			( var_HERE is where we started making this definition )
+						ST			R1,var_LATEST		( so make var_LATEST point there )
+						ST			R0,var_HERE			( and make var_HERE point to the end )
 						JSR			NEXT
 }
 #primitive , COMMA

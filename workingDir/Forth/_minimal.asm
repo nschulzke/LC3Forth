@@ -23,13 +23,9 @@
 	FILELOC KEYSOURCE !
 ;
 
-: HEADER
-	WORD (HEADER)
-	DOCOL ,
-;
-
 : :
 	HEADER
+	DOCOL ,
 	LATEST @
 	HIDDEN
 	]

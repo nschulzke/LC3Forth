@@ -53,8 +53,18 @@
 	>CFA ,
 ;
 
+: ALIAS
+	HEADER
+	WORD
+	FIND >CFA
+	DOCOL ,
+	,
+	POSTPONE EXIT
+;
+
 : CREATE
 	HEADER
+	DOCOL ,
 	POSTPONE LIT
 	HERE @ 2 + ,		\ variable begins two spaces down
 	POSTPONE EXIT
@@ -62,6 +72,7 @@
 
 : CONSTANT
 	HEADER
+	DOCOL ,
 	POSTPONE LIT		\ Append LIT
 	,					\ Append the top of the stack
 	POSTPONE EXIT		\ And append EXIT

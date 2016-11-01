@@ -17,6 +17,15 @@ DOCOL					JSR			PUSHRSP_R6
 						AND			R6,R3,R3				; Then line them up. R6 and R3 now both point to the first real word
 						JSR			NEXT
 
+; Def looks like: link name dodat word data
+DODAT					JSR			PUSHRSP_R6				; This is the address of the word after us in the caller definition
+						ADD			R3,R3,#1				; DODAT is called at codeword in definition, so increment R3 to reach next location
+						ADD			R0,R3,#1				; Get the address that follows the execution word
+						LDR			R3,R3,#0				; This address doesn't point to a codeword: LDR to get the word it points to, so NEXT will work
+						AND			R6,R3,R3				; Then line them up. R6 and R3 now both point to the destination of the pointer
+						JSR			PUSH_R0					; and push it to the stack
+						JSR			NEXT
+
 #insert primitives
 
 ; <-- Other subroutines

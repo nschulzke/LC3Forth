@@ -115,4 +115,5 @@ HIDE QUIT
 	
 	Enjoy!"
 	CR
+	QUIT
 ;
