@@ -80,9 +80,59 @@ FROMR
                      JSR        POPRSP_R3
                      JSR        PUSH_R3
                      JSR        NEXT
+DFROMR
+                     JSR        POPRSP_R3
+                     AND        R2,R3,R3
+                     JSR        POPRSP_R3
+                     JSR        PUSH_R3
+                     JSR        PUSH_R2
+                     JSR        NEXT
+DTOR
+                     JSR        _DTOR
+                     JSR        NEXT
+
+_DTOR                ST         R7,DTOR_CB
+
+                     JSR        POP_R2
+                     JSR        POP_R3
+                     JSR        PUSHRSP_R3
+                     AND        R3,R2,R2
+                     JSR        PUSHRSP_R3
+
+                     LD         R7,DTOR_CB
+                     RET        
+DTOR_CB              .BLKW      1
 RFETCH
                      LDR        R0,R5,#0
                      JSR        PUSH_R0
+                     JSR        NEXT
+I
+                     LDR        R0,R5,#0
+                     JSR        PUSH_R0
+                     JSR        NEXT
+J
+                     LDR        R0,R5,#-2
+                     JSR        PUSH_R0
+                     JSR        NEXT
+UNLOOP
+                     JSR        POPRSP_R3
+                     JSR        POPRSP_R3
+                     JSR        NEXT
+DO
+                     JSR        _DTOR
+                     JSR        NEXT
+LOOP
+                     AND        R3,R3,#0
+                     LDR        R1,R5,#0
+                     ADD        R1,R1,#1
+                     LDR        R0,R5,#-1
+                     NOT        R2,R1
+                     ADD        R2,R2,#1
+                     ADD        R2,R2,R0
+                     BRp        LOOP_continue
+                     ADD        R3,R3,#-1
+LOOP_continue        JSR        PUSH_R3
+                     STR        R1,R5,#0
                      JSR        NEXT
 INCR
                      LDR        R0,R4,#0
@@ -1114,11 +1164,39 @@ name_FROMR           .FILL      name_TOR
                      .FILL      #2
                      .STRINGZ   "R>"
 code_FROMR           .FILL      FROMR
-name_RFETCH          .FILL      name_FROMR
+name_DFROMR          .FILL      name_FROMR
+                     .FILL      #3
+                     .STRINGZ   "2R>"
+code_DFROMR          .FILL      DFROMR
+name_DTOR            .FILL      name_DFROMR
+                     .FILL      #3
+                     .STRINGZ   "2>R"
+code_DTOR            .FILL      DTOR
+name_RFETCH          .FILL      name_DTOR
                      .FILL      #2
                      .STRINGZ   "R@"
 code_RFETCH          .FILL      RFETCH
-name_INCR            .FILL      name_RFETCH
+name_I               .FILL      name_RFETCH
+                     .FILL      #1
+                     .STRINGZ   "I"
+code_I               .FILL      I
+name_J               .FILL      name_I
+                     .FILL      #1
+                     .STRINGZ   "J"
+code_J               .FILL      J
+name_UNLOOP          .FILL      name_J
+                     .FILL      #6
+                     .STRINGZ   "UNLOOP"
+code_UNLOOP          .FILL      UNLOOP
+name_DO              .FILL      name_UNLOOP
+                     .FILL      #4
+                     .STRINGZ   "(DO)"
+code_DO              .FILL      DO
+name_LOOP            .FILL      name_DO
+                     .FILL      #6
+                     .STRINGZ   "(LOOP)"
+code_LOOP            .FILL      LOOP
+name_INCR            .FILL      name_LOOP
                      .FILL      #2
                      .STRINGZ   "1+"
 code_INCR            .FILL      INCR

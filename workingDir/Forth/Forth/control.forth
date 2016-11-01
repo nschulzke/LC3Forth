@@ -88,22 +88,6 @@
 	REPEAT
 ;
 
-( limit index -- | -- limit index )
-: (DO)
-	R>				\ ( limit index pointer )
-	-ROT			\ ( pointer limit index )
-	2>R >R			\ ( limit index pointer ) on return
-;
-
-: (LOOP)
-	R>				\ ( pointer ) ( return: limit index )
-	2R>				\ ( pointer limit index )
-	1+ 2DUP 		\ ( pointer limit index limit index )
-	<=				\ ( pointer limit index flag )
-	-ROT 2>R		\ ( pointer flag ) ( return: limit index )
-	SWAP >R			\ ( flag ) ( return limit index pointer )
-;
-
 : DO IMMEDIATE
 	POSTPONE (DO)
 	POSTPONE BEGIN
@@ -112,5 +96,5 @@
 : LOOP IMMEDIATE
 	POSTPONE (LOOP)
 	POSTPONE UNTIL
-	POSTPONE 2RDROP		\ Empty return stack
+	POSTPONE UNLOOP		\ Empty return stack
 ;
