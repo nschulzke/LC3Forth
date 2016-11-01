@@ -20,6 +20,14 @@
 						JSR			PUSH_R0
 						JSR			NEXT
 }
+( A -- A A [A<>0] )
+#primitive ?DUP QDUP
+{
+						LDR			R0,R4,#0
+						BRz			QDUP_skip
+						JSR			PUSH_R0
+QDUP_skip				JSR			NEXT
+}
 ( A B -- A B A )
 #primitive OVER OVER
 {
@@ -48,14 +56,6 @@
 						STR			R2,R4,#-1
 						STR			R0,R4,#-2
 						JSR			NEXT
-}
-( A -- A A [A<>0] )
-#primitive ?DUP QDUP
-{
-						LDR			R0,R4,#0
-						BRz			QDUP_skip
-						JSR			PUSH_R0
-QDUP_skip				JSR			NEXT
 }
 #primitive >R TOR
 {
