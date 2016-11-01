@@ -53,13 +53,12 @@
 	>CFA ,
 ;
 
+( addr -- )
 : ALIAS
 	HEADER
-	WORD
-	FIND >CFA
-	DOCOL ,
-	,
-	POSTPONE EXIT
+	DOCOL ,				\ append DOCOL
+	,					\ append the address
+	POSTPONE EXIT		\ append EXIT
 ;
 
 : CREATE
