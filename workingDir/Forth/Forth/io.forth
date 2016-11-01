@@ -11,14 +11,6 @@
 
 24 CONSTANT ROWS
 
-: ?NL
-	DELAYED_NL @
-	IF
-		CR
-		0 DELAYED_NL !
-	THEN
-;
-
 : SPACES
 	BEGIN
 		DUP 0>
