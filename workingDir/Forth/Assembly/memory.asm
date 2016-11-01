@@ -16,7 +16,7 @@
 {
 						JSR			POP_R2					( Address to add to )
 						JSR			POP_R1					( How much to add )
-						LDR			R0,R2,#0				( Bring in the number from memory )
+_ADDSTORE				LDR			R0,R2,#0				( Bring in the number from memory )
 						ADD			R0,R0,R1				( Add them )
 						STR			R0,R2,#0				( Put R0 into address in R2 )
 						JSR			NEXT
@@ -27,10 +27,7 @@
 						JSR			POP_R1					( How much to add )
 						NOT			R1,R1
 						ADD			R1,R1,#1				( Two's complement )
-						LDR			R0,R2,#0				( Bring in the number from memory )
-						ADD			R0,R0,R1				( Add them )
-						STR			R0,R2,#0				( Put R0 into address in R2 )
-						JSR			NEXT
+						JSR			_ADDSTORE				( Run ADDSTORE from here -- only with a negative value )
 }
 #primitive RSP@ RSPFETCH
 {
