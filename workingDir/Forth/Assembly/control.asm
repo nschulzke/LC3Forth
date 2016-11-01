@@ -32,7 +32,7 @@
 {
 						LDR			R1,R5,#0	( index )
 						ADD			R1,R1,#1
-						STR			R1,R5,#0	( store the limit )
+						STR			R1,R5,#0	( store the new index )
 						LDR			R0,R5,#-1	( limit )
 						NOT			R1,R1
 						ADD			R1,R1,#1	( -index )
