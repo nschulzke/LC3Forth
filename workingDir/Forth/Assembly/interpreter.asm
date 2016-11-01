@@ -12,10 +12,7 @@
 }
 #primitive LIT_XT LIT_XT
 {
-						LDR			R0,R6,#0				( Grab the next item to be executed )
-						ADD			R6,R6,#1				( Skip that item )
-						JSR			PUSH_R0					( Push it on the stack )
-						JSR			NEXT
+						JSR			LIT
 }
 #primitive LITSTRING LITSTRING
 {

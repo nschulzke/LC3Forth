@@ -22,7 +22,7 @@
 						JSR			PUSH_R0
 						JSR			NEXT
 }
-#constant FILELOC FILELOC <x4000>
+#primitive FILELOC FILELOC
 {
 						LD			R0,_FILELOC
 						JSR			PUSH_R0
