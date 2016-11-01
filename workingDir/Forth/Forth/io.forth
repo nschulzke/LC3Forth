@@ -141,7 +141,7 @@
 : WORDS
 	LATEST @
 	BEGIN
-		?DUP		\ link pointer not 0
+		DUP	@		( pointer next )
 	WHILE
 		DUP ?HIDDEN	\ check if hidden
 		NOT IF 		\ if not hidden
@@ -150,6 +150,7 @@
 		THEN
 		@			\ jump to previous word
 	REPEAT
+	DROP
 ;
 
 ( cfa -- addr )
