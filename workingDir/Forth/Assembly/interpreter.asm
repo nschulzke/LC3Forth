@@ -283,6 +283,14 @@ _TCFA					AND			R1,R1,#0
 						ADD			R0,R0,R1			( skip length )
 						RET
 }
+#primitive >DFA TDFA
+{
+						JSR			POP_R0
+						JSR			_TCFA
+						ADD			R0,R0,#1
+						JSR			PUSH_R0
+						JSR			NEXT
+}
 #primitive PARSE_ERROR PARSE_ERROR
 {
 						LEA			R0,const_PARSE_ERROR
