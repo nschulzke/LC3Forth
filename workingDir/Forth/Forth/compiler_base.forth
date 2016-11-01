@@ -61,25 +61,30 @@
 	POSTPONE EXIT		\ append EXIT
 ;
 
+: NOOP ;
+
 : CREATE
 	HEADER
-	DOCOL ,
-	POSTPONE LIT
-	HERE @ 2 + ,		\ variable begins two spaces down
-	POSTPONE EXIT
+	DODAT ,
+	['] NOOP 1+ ,
+;
+
+: DOES>
+	R>				\ Gets my caller ( also guarantees that we don't run what follows )
+	LATEST @ >DFA	\ The last CREATE entry
+	!				\ Store my caller in the DFA entry
 ;
 
 : CONSTANT
-	HEADER
-	DOCOL ,
-	POSTPONE LIT		\ Append LIT
-	,					\ Append the top of the stack
-	POSTPONE EXIT		\ And append EXIT
+	CREATE
+	,
+	DOES>
+	@
 ;
 
 : VARIABLE
 	CREATE
-	0 ,				\ Variable
+	0 ,
 ;
 
 \ Reserves memory locations after HERE
