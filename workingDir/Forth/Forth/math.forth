@@ -45,11 +45,9 @@
 ;
 
 : LSHIFT
-	?DUP IF
-		0 DO
-			2*
-		LOOP
-	THEN
+	0 ?DO
+		2*
+	LOOP
 ;
 
 HEX
@@ -68,11 +66,9 @@ HEX
 		THEN
 		
 		SWAP 1-			\ We did it once, get ready to loop
-		?DUP IF
-			0 DO
-				2/
-			LOOP
-		THEN
+		0 ?DO
+			2/
+		LOOP
 	THEN
 ;
 DECIMAL

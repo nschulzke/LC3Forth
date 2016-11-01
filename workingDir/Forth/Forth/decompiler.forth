@@ -10,38 +10,37 @@
 : BOUNDS
 	WORD FIND		\ Get the word
 
-	?DUP IF
-		HERE @			( word last ) \ last word
-		LATEST @		( word last curr )
-		BEGIN
-			2 PICK		( word last curr word )
-			OVER		( word last curr word curr )
-			<>			( word last curr word<>curr? )
-		WHILE			( word last curr )
-			NIP			( word curr )
-			DUP @		( word curr prev )
-		REPEAT
-		
-		DROP			( start-of-word start-of-next )
-		
-		BEGIN
-			2DUP <				\ are we still within range?
-			IF 1 ELSE 0 THEN
-			OVER @ ['] EXIT <>		\ still no sign of EXIT?
-			IF 1 ELSE 0 THEN
-			AND
-		WHILE
-			1-			( start-of-word location-1 )
-		REPEAT
-	ELSE
-		." UNKNOWN WORD"
-	THEN	\ ends IF found
+	?DUP 0= ABORT" Unknown word! "
+	
+	HERE @			( word last ) \ last word
+	LATEST @		( word last curr )
+	BEGIN
+		2 PICK		( word last curr word )
+		OVER		( word last curr word curr )
+		<>			( word last curr word<>curr? )
+	WHILE			( word last curr )
+		NIP			( word curr )
+		DUP @		( word curr prev )
+	REPEAT
+	
+	DROP			( start-of-word start-of-next )
+	
+	BEGIN
+		2DUP <				\ are we still within range?
+		IF 1 ELSE 0 THEN
+		OVER @ ['] EXIT <>		\ still no sign of EXIT?
+		IF 1 ELSE 0 THEN
+		AND
+	WHILE
+		1-			( start-of-word location-1 )
+	REPEAT
 ;
 
 : (SEE)
 	CASE
 		['] LIT OF
-			1+ DUP @ .  \ if LIT, print the literal value
+			1+
+			DUP	@ .  \ if LIT, print the literal value
 		ENDOF
 		['] LIT_XT OF
 			." ['] "
@@ -56,6 +55,14 @@
 			'"' EMIT SPACE	\ final quote and space
 			+				( end addr+len )
 			1-				\ we're going to add 1 again below
+		ENDOF
+		['] (DO) OF
+			." DO "
+			1+				\ skip offset
+		ENDOF
+		['] (LOOP) OF
+			." LOOP "
+			1+				\ skip offset
 		ENDOF
 		['] 0BRANCH OF
 			." 0BRANCH ( "

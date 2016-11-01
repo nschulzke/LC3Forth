@@ -2,58 +2,76 @@
 : FALSE 0 ;
 : NOT 0= ;
 
-\ ( -- BEGIN_addr )
-: BEGIN IMMEDIATE HERE @ ;
+( -- addr )
+: >MARK
+	HERE @		\ get the current compiling location
+	0 ,			\ save dummy at current location
+;
 
-\ ( BEGIN_addr -- )
-: AGAIN IMMEDIATE
-	POSTPONE BRANCH	\ Set branch
+( addr -- )
+: >RESOLVE
+	DUP				( addr addr )
+	HERE @ SWAP -	( addr offset )
+	SWAP !			\ and back-fill it in the original location
+;
+
+( -- addr )
+: <MARK
+	HERE @
+;
+
+( addr -- )
+: <RESOLVE
 	HERE @ - ,		\ Offset = BEGIN_addr - AGAIN_addr
 ;
 
-\ ( BEGIN_addr -- )
+( -- BEGIN_addr )
+: BEGIN IMMEDIATE
+	<MARK
+;
+
+( BEGIN_addr -- )
+: AGAIN IMMEDIATE
+	POSTPONE BRANCH	\ Set branch
+	<RESOLVE
+;
+
+( BEGIN_addr -- )
 : UNTIL IMMEDIATE
 	POSTPONE 0BRANCH	\ Same as AGAIN except conditional
-	HERE @ - ,
+	<RESOLVE
 ;
 
 \ ( BEGIN_addr -- BEGIN_addr WHILE_addr )
 : WHILE IMMEDIATE
 	POSTPONE 0BRANCH	\ Set 0BRANCH
-	HERE @			\ New offset on stack
-	0 ,				\ Dummy offset
+	>MARK
 ;
 
 \ ( BEGIN_addr WHILE_addr -- )
 : REPEAT IMMEDIATE
 	POSTPONE BRANCH	\ Set BRANCH
 	SWAP			\ WHILE_addr BEGIN_addr
-	HERE @ - ,		\ Get offset and compile it ( WHILE_addr )
-	DUP				\ WHILE_addr WHILE_addr
-	HERE @ SWAP -	\ WHILE_addr offset
-	SWAP !			\ and back-fill it in the original location
+	<RESOLVE		\ Get offset and compile it ( WHILE_addr )
+	>RESOLVE
 ;
 
 : IF IMMEDIATE
 	POSTPONE 0BRANCH
-	HERE @			\ ifAddress
-	0 ,				\ dummy offset of 0 until told otherwise
+	>MARK
 ;
 
+\ ( IF_addr  -- )
 : ELSE IMMEDIATE
 	POSTPONE BRANCH	\ branch around the false
-	HERE @			\ ifAddress -- ifAddress elseAddress
-	0 ,				\ dummy offset
+	>MARK
 	SWAP			\ ifAddress elseAddress -- elseAddress ifAddress
-	DUP				\ duplicate ifAddress for subtraction
-	HERE @ SWAP -	\ get the offset to the current location (beginning of false part)
-	SWAP !			\ store the offset in the location that was saved
+	>RESOLVE
 ;
 
+\ ( IF/ELSE_addr -- )
 : THEN IMMEDIATE
-	DUP				\ duplicate the HERE from the stack
-	HERE @ SWAP -	\ ifOrElseAddress ifOrElseAddress -- ifOrElseAddress offset
-	SWAP !			\ ifOrElseAddress offset -- \ store the offset in the variable
+	>RESOLVE
 ;
 
 : UNLESS IMMEDIATE
@@ -69,7 +87,7 @@
 : OF IMMEDIATE
 	POSTPONE OVER		\ append OVER
 	POSTPONE =			\ append =
-	POSTPONE IF		\ append IF
+	POSTPONE IF			\ append IF
 	POSTPONE DROP		\ append DROP
 ;
 
@@ -90,11 +108,17 @@
 
 : DO IMMEDIATE
 	POSTPONE (DO)
-	POSTPONE BEGIN
+	>MARK
+;
+
+: ?DO IMMEDIATE
+	POSTPONE (?DO)
+	>MARK
 ;
 
 : LOOP IMMEDIATE
 	POSTPONE (LOOP)
-	POSTPONE UNTIL
-	POSTPONE UNLOOP		\ Empty return stack
+	DUP 1+			( do-addr back-addr )
+	<RESOLVE		\ Resolve back to DO/?DO
+	>RESOLVE		\ Resolve forward ( where ?DO skips to )
 ;

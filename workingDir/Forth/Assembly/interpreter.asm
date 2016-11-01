@@ -368,16 +368,3 @@ _COMMA					LD			R1,var_HERE
 						ST			R0,var_STATE
 						JSR			NEXT
 }
-#primitive BRANCH BRANCH
-{
-						LDR			R0,R6,#0		( Grab the next item, this is our offset )
-						ADD			R6,R6,R0		( Add it to R6 to skip forward )
-						JSR			NEXT
-}
-#primitive 0BRANCH ZBRANCH
-{
-						JSR			POP_R0
-						BRz			BRANCH			( If top of stack was zero, goto BRANCH )
-						ADD			R6,R6,#1		( otherwise just skip the offset )
-						JSR			NEXT
-}

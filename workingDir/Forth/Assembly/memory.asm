@@ -46,12 +46,6 @@
 						ADD			R5,R5,R0
 						JSR			NEXT
 }
-#primitive RDROP RDROP
-{
-						ADD			R5,R5,#-1
-						JSR			PUSHRSP_R3
-						JSR			NEXT
-}
 #primitive DSP@ DSPFETCH
 {
 						AND			R0,R0,#0

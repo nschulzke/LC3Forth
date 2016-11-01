@@ -7,10 +7,10 @@
 ( A B -- B A )
 #primitive SWAP SWAP
 {
-						JSR			POP_R0
-						JSR			POP_R1
-						JSR			PUSH_R0
-						JSR			PUSH_R1
+						LDR			R0,R4,#0
+						LDR			R1,R4,#-1
+						STR			R0,R4,#-1
+						STR			R1,R4,#0
 						JSR			NEXT
 }
 ( A -- A A )
@@ -30,23 +30,23 @@
 ( A B C -- B C A )
 #primitive ROT ROT
 {
-						JSR			POP_R0
-						JSR			POP_R1
-						JSR			POP_R2
-						JSR			PUSH_R1
-						JSR			PUSH_R0
-						JSR			PUSH_R2
+						LDR			R0,R4,#0
+						LDR			R1,R4,#-1
+						LDR			R2,R4,#-2
+						STR			R2,R4,#0
+						STR			R0,R4,#-1
+						STR			R1,R4,#-2
 						JSR			NEXT
 }
 ( A B C -- C A B )
 #primitive -ROT NROT
 {
-						JSR			POP_R0
-						JSR			POP_R1
-						JSR			POP_R2
-						JSR			PUSH_R0
-						JSR			PUSH_R2
-						JSR			PUSH_R1
+						LDR			R0,R4,#0
+						LDR			R1,R4,#-1
+						LDR			R2,R4,#-2
+						STR			R1,R4,#0
+						STR			R2,R4,#-1
+						STR			R0,R4,#-2
 						JSR			NEXT
 }
 ( A -- A A [A<>0] )
@@ -101,41 +101,9 @@ DTOR_CB					.BLKW		1
 						JSR			PUSH_R0
 						JSR			NEXT
 }
-#primitive I I
+#primitive RDROP RDROP
 {
-						LDR			R0,R5,#0
-						JSR			PUSH_R0
-						JSR			NEXT						
-}
-#primitive J J
-{
-						LDR			R0,R5,#-2
-						JSR			PUSH_R0
-						JSR			NEXT
-}
-#primitive UNLOOP UNLOOP
-{
-						JSR			POPRSP_R3
-						JSR			POPRSP_R3
-						JSR			NEXT
-}
-#primitive (DO) DO
-{
-						JSR			_DTOR
-						JSR			NEXT
-}
-#primitive (LOOP) LOOP
-{
-						AND			R3,R3,#0
-						LDR			R1,R5,#0	( index )
-						ADD			R1,R1,#1
-						LDR			R0,R5,#-1	( limit )
-						NOT			R2,R1
-						ADD			R2,R2,#1	( -index )
-						ADD			R2,R2,R0	( limit-index )
-						BRp			LOOP_continue
-						ADD			R3,R3,#-1
-LOOP_continue			JSR			PUSH_R3
-						STR			R1,R5,#0
+						ADD			R5,R5,#-1
+						JSR			PUSHRSP_R3
 						JSR			NEXT
 }

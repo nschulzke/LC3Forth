@@ -20,13 +20,12 @@
 ;
 
 : SPACES
-	DUP 0> IF
-		0 DO
-			SPACE
-		LOOP
-	ELSE
-		DROP
-	THEN
+	BEGIN
+		DUP 0>
+	WHILE
+		SPACE
+		1-
+	REPEAT
 ;
 
 ( u -- )
@@ -72,13 +71,13 @@
 	UWIDTH		( width u uwidth )
 	ROT			( u uwidth width )
 	SWAP -		( u width-uwidth ) \ width - uwidth is padding
-	DUP 0> IF
-		0 DO
-			[CHAR] 0 EMIT
-		LOOP
-	ELSE
-		DROP
-	THEN
+	
+	BEGIN
+		DUP 0>
+	WHILE
+		[CHAR] 0 EMIT
+		1-
+	REPEAT
 	U.
 ;
 
@@ -118,6 +117,8 @@
 : .S
 	DSP@ S0			( dsp S0<addr> )
 	BEGIN
+		2DUP HEX U. U. DECIMAL
+		KEY DROP
 		2DUP >		( dsp addr dsp>addr )
 	WHILE
 		1+			( dsp addr+1 )
@@ -166,8 +167,6 @@
 		THEN
 		@			( back up )
 	REPEAT
-	DROP			( cfa curr -- cfa )
-	0				( cfa -- cfa 0 )
 ;
 
 ( addr len -- )

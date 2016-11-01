@@ -1,6 +1,7 @@
 #include Assembly\constants.asm
 
 #include Assembly\stackops.asm
+#include Assembly\control.asm
 #include Assembly\math.asm
 
 #include Assembly\memory.asm
