@@ -23,3 +23,9 @@
 						JSR			NEXT
 }
 #constant FILELOC FILELOC <x4000>
+{
+						LD			R0,_FILELOC
+						JSR			PUSH_R0
+						JSR			NEXT
+_FILELOC				.FILL		x4000
+}
