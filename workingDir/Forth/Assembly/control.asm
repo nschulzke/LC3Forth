@@ -16,7 +16,7 @@
 						LDR			R0,R4,#0	( index )
 						LDR			R1,R4,#-1	( limit )
 						NOT			R1,R1
-						AND			R1,R1,#1	( -limit )
+						ADD			R1,R1,#1	( -limit )
 						ADD			R1,R1,R0	( index-limit )
 						BRnp		DO			( act like DO if we can iterate )
 						ADD			R4,R4,#-2	( drop them if not equal )
