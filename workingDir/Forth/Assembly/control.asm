@@ -32,7 +32,7 @@
 {
 						LDR			R1,R5,#0	( index )
 						ADD			R1,R1,#1
-						STR			R1,R5,#0	( store the new index )
+_LOOP					STR			R1,R5,#0	( store the new index )
 						LDR			R0,R5,#-1	( limit )
 						NOT			R1,R1
 						ADD			R1,R1,#1	( -index )
@@ -42,6 +42,14 @@
 						ADD			R6,R6,#1	( otherwise, move past offset )
 						
 						BRnzp		UNLOOP
+}
+#primitive (+LOOP) pLOOP
+{
+						LDR			R1,R5,#0	( index )
+						JSR			POP_R2
+						ADD			R1,R1,R2	( index + stackval )
+						
+						JSR			_LOOP
 }
 #primitive I I
 {

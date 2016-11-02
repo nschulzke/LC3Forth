@@ -122,3 +122,10 @@
 	<RESOLVE		\ Resolve back to DO/?DO
 	>RESOLVE		\ Resolve forward ( where ?DO skips to )
 ;
+
+: +LOOP IMMEDIATE
+	POSTPONE (+LOOP)
+	DUP 1+			( do-addr back-addr )
+	<RESOLVE		\ Resolve back to DO/?DO
+	>RESOLVE		\ Resolve forward ( where ?DO skips to )
+;
