@@ -1,8 +1,7 @@
-VARIABLE KEYBUFFER 127 ALLOT
+128 ARRAY KEYBUFFER
 
 : SOURCE
 	KEYBUFFER
-	128	
 ;
 
 ( addr maxlen )
@@ -15,7 +14,7 @@ VARIABLE KEYBUFFER 127 ALLOT
 		DUP 8 = IF		\ backspace functionality
 			171 EMIT			\ Emit <<
 			SWAP				( key addr )
-			DUP KEYBUFFER >		( addr addr>keybuffer? )
+			DUP KEYBUFFER DROP >		( addr addr>keybuffer? )
 			IF			\ if we haven't hit the bottom of the buffer yet
 				1 -
 			THEN
@@ -95,8 +94,8 @@ HIDE QUIT
 	BEGIN
 		CR ." > "
 		R0 RSP!
-		SOURCE ACCEPT
-		KEYBUFFER KEYSOURCE !
+		KEYBUFFER ACCEPT
+		KEYBUFFER DROP KEYSOURCE !
 		INTERPRET
 		SPACE ." ok "
 	AGAIN

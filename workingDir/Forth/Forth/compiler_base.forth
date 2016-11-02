@@ -85,6 +85,7 @@
 : VARIABLE
 	CREATE
 	0 ,
+	DOES>
 ;
 
 \ Reserves memory locations after HERE

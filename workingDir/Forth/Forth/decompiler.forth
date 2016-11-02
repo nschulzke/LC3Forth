@@ -60,8 +60,20 @@
 			." DO "
 			1+				\ skip offset
 		ENDOF
+		['] (?DO) OF
+			." ?DO "
+			1+				\ skip offset
+		ENDOF
 		['] (LOOP) OF
 			." LOOP "
+			1+				\ skip offset
+		ENDOF
+		['] (+LOOP) OF
+			." LOOP "
+			1+				\ skip offset
+		ENDOF
+		['] (LEAVE) OF
+			." LEAVE "
 			1+				\ skip offset
 		ENDOF
 		['] 0BRANCH OF
@@ -89,18 +101,26 @@
 
 : SEE
 	BOUNDS
-	SWAP		( end-of-word start-of-word )
+	
+	CR
 	
 	2DUP
 	= IF
-		':' EMIT SPACE
-		DUP ID.	SPACE
-		>CFA @ H.
-		';' EMIT SPACE
-		." PRIMITIVE "
-		DROP EXIT
-	THEN
-			
+		>CFA @
+		DODAT = IF
+			DUP >DFA @ CFA> ID.
+			DUP SPACE ID. ."  = "
+			DUP >DFA 1+ @ .
+		ELSE
+			." CODE "
+			DUP ID.	SPACE
+			>CFA @ H.
+		THEN
+		EXIT
+	THEN		
+	
+	SWAP		( end-of-word start-of-word )
+	
 	\ start with ": NAME [IMMEDIATE] "
 	':' EMIT SPACE DUP ID. SPACE
 	DUP ?IMMEDIATE IF ." IMMEDIATE " THEN
@@ -114,5 +134,5 @@
 		1+			( end start+1 )
 	REPEAT
 	';' EMIT SPACE
-	DROP DROP
+	2DROP
 ;
