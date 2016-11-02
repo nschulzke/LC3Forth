@@ -41,8 +41,6 @@ _WORD_start				JSR			_INPUT
 						NOT			R0,R1
 						ADD			R0,R0,#1
 						OUT
-						AND			R1,R1,#0
-						ST			R1,var_DELAYED_NL
 						
 _WORD_skip_NL			LEA			R3,_WORD_start
 						JSR			_WORD_check_white

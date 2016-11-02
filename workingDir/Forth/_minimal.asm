@@ -1,10 +1,10 @@
 #include Assembly\constants.asm
 
 #include Assembly\stackops.asm
-#include Assembly\control.asm
+#include Assembly\memory.asm
 #include Assembly\math.asm
 
-#include Assembly\memory.asm
+#include Assembly\control.asm
 #include Assembly\io.asm
 
 #include Assembly\interpreter.asm
@@ -56,7 +56,6 @@
 
 : QUIT
 	10 EMIT
-	0 DELAYED_NL !
 	R0 RSP!
 	INTERPRET
 	BRANCH
@@ -107,9 +106,4 @@
 				LIT_XT LIT ,		( compile LIT )
 				,				( compile the number )
 			( if we're not in compile mode, we don't need to do anything, the number is on the stack )
-	DELAYED_NL @
-	0BRANCH
-	<#8>
-	10 EMIT
-	0 DELAYED_NL !
 ;

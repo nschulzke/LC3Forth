@@ -44,7 +44,6 @@ KEY_CB					.BLKW		1
 KEY_R1					.BLKW		1
 KEY_R2					.BLKW		1
 }
-#variable KEYECHO KEYECHO <#1>
 #primitive INPUT INPUT
 {
 						JSR			_INPUT
@@ -67,10 +66,10 @@ _INPUT					ST			R7,INPUT_CB
 INPUT_cleanup			LD			R7,INPUT_CB
 						RET
 
-INPUT_cleanup_NL		ST			R0,var_DELAYED_NL
+INPUT_cleanup_NL		AND			R1,R0,R0
 						LD			R0,key_SPACE
 						OUT
-						LD			R0,var_DELAYED_NL
+						AND			R1,R0,R0
 						BRnzp		INPUT_cleanup
 
 						( We only get here if we're reading a file )
@@ -96,7 +95,7 @@ INPUT_eof				AND			R1,R1,#0			( set KEYSOURCE back to 0 if eof )
 INPUT_CB				.BLKW		1
 key_SPACE				.FILL		#32
 }
-#variable DELAYED_NL DELAYED_NL <#0>
+#variable KEYECHO KEYECHO <#1>
 #variable KEYSOURCE KEYSOURCE <#0>
 #primitive EMIT EMIT
 {

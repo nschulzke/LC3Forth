@@ -8,6 +8,7 @@
 #include Forth\io.forth
 #include Forth\decompiler.forth
 #include Forth\interpreter.forth
+#include Forth\arrays.forth
 
 FALSE KEYECHO !
 
