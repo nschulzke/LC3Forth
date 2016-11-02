@@ -8,6 +8,15 @@
 	2DROP
 ;
 
+( addr1 addr2 u -- )
+: MOVE
+	0 ?DO
+		OVER I + @	( addr1 addr2 val[i] )
+		OVER I + !	( addr1 addr2 )
+	LOOP
+	2DROP
+;
+
 ( -- start size )
 : ARRAY
 	CREATE
