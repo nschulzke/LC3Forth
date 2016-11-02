@@ -4,7 +4,7 @@
 	?DUP 0= ABORT" Couldn't find word"
 	
 	DUP @ LATEST !	\ make LATEST point to the word above it
-	HERE !			\ and move our current data up to that point
+	DP !			\ and move our current data up to that point
 ;
 
 : BOUNDS
@@ -12,7 +12,7 @@
 
 	?DUP 0= ABORT" Unknown word! "
 	
-	HERE @			( word last ) \ last word
+	HERE			( word last ) \ last word
 	LATEST @		( word last curr )
 	BEGIN
 		2 PICK		( word last curr word )

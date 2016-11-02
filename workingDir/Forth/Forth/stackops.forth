@@ -32,3 +32,13 @@
 : 2OVER
 	2>R 2DUP 2R> 2SWAP
 ;
+
+: 2!
+	SWAP OVER !
+	1+ !
+;
+
+: 2@
+	DUP 1+ @
+	SWAP @
+;

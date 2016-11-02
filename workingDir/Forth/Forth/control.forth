@@ -4,25 +4,25 @@
 
 ( -- addr )
 : >MARK
-	HERE @		\ get the current compiling location
+	HERE		\ get the current compiling location
 	0 ,			\ save dummy at current location
 ;
 
 ( addr -- )
 : >RESOLVE
 	DUP				( addr addr )
-	HERE @ SWAP -	( addr offset )
+	HERE SWAP -	( addr offset )
 	SWAP !			\ and back-fill it in the original location
 ;
 
 ( -- addr )
 : <MARK
-	HERE @
+	HERE
 ;
 
 ( addr -- )
 : <RESOLVE
-	HERE @ - ,		\ Offset = BEGIN_addr - AGAIN_addr
+	HERE - ,		\ Offset = BEGIN_addr - AGAIN_addr
 ;
 
 ( -- BEGIN_addr )
@@ -116,10 +116,32 @@
 	>MARK
 ;
 
+: LEAVE IMMEDIATE
+	POSTPONE (LEAVE)
+	0 ,
+;
+
+( addr -- )
+: >LEAVE
+	BEGIN
+		1+
+		DUP HERE	( addr addr here )
+		<			\ as long as addr < here
+	WHILE
+		['] (LEAVE)
+		OVER @ =	( addr flag )
+		IF
+			1+ DUP >RESOLVE
+		THEN
+	REPEAT
+	DROP
+;
+
 : LOOP IMMEDIATE
 	POSTPONE (LOOP)
 	DUP 1+			( do-addr back-addr )
 	<RESOLVE		\ Resolve back to DO/?DO
+	DUP >LEAVE
 	>RESOLVE		\ Resolve forward ( where ?DO skips to )
 ;
 

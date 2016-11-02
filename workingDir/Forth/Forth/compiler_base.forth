@@ -89,7 +89,7 @@
 
 \ Reserves memory locations after HERE
 : ALLOT
-	HERE +!			\ ( adds n to here, old here is still on stack )
+	DP +!			\ ( adds n to here, old here is still on stack )
 ;
 
 : HIDE WORD FIND HIDDEN ;

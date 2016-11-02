@@ -28,6 +28,12 @@
 						ADD			R6,R6,#1	( skip offset, we don't care about it )
 						JSR			NEXT
 }
+#primitive (LEAVE) LEAVE
+{
+						JSR			POPRSP_R3
+						JSR			POPRSP_R3
+						BRnzp		BRANCH
+}
 #primitive (LOOP) LOOP
 {
 						LDR			R1,R5,#0	( index )

@@ -323,7 +323,7 @@ F_LENMASK				.FILL		x1f
 #primitive HEADER _HEADER
 {
 						JSR			_WORD
-						LD			R0,var_HERE			( address of header )
+						LD			R0,var_DP			( address of header )
 						LD			R3,var_LATEST		( link pointer )
 						STR			R3,R0,#0			( store link at head )
 						ADD			R0,R0,#1			( increment pointer )
@@ -340,9 +340,9 @@ _CREATE_copy_loop		LDR			R3,R2,#0			( load the char )
 						STR			R1,R0,#0			( store 0 [null-terminator] )
 						ADD			R0,R0,#1			( increment destination pointer )
 						
-						LD			R1,var_HERE			( var_HERE is where we started making this definition )
+						LD			R1,var_DP			( var_DP is where we started making this definition )
 						ST			R1,var_LATEST		( so make var_LATEST point there )
-						ST			R0,var_HERE			( and make var_HERE point to the end )
+						ST			R0,var_DP			( and make var_DP point to the end )
 						JSR			NEXT
 }
 #primitive , COMMA
@@ -351,10 +351,10 @@ _CREATE_copy_loop		LDR			R3,R2,#0			( load the char )
 						JSR			_COMMA
 						JSR			NEXT
 						
-_COMMA					LD			R1,var_HERE
+_COMMA					LD			R1,var_DP
 						STR			R0,R1,#0			( store code pointer at HERE )
 						ADD			R1,R1,#1			( increment pointer )
-						ST			R1,var_HERE			( and store it in HERE )
+						ST			R1,var_DP			( and store it in HERE )
 						RET
 }
 #primitive [ LBRAC 128

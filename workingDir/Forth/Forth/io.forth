@@ -178,7 +178,7 @@
 : S" IMMEDIATE
 	STATE @ IF				\ Are we compiling?
 		POSTPONE LITSTRING	\ append LITSTRING
-		HERE @				( addr )
+		HERE				( addr )
 		0 ,					\ we don't yet know length, dummy value
 		BEGIN
 			INPUT			\ next char
@@ -188,11 +188,11 @@
 		REPEAT
 		DROP				\ drop the final double quote
 		DUP					( addr addr )
-		HERE @ SWAP -		( addr length+1 ) \ we measured from length word
+		HERE SWAP -		( addr length+1 ) \ we measured from length word
 		1-					( addr length )
 		SWAP !				\ store length at location, empty stack
 	ELSE
-		HERE @				( addr )
+		HERE				( addr )
 		BEGIN
 			INPUT			\ same as above
 			DUP '"'
@@ -201,8 +201,8 @@
 			1+				( addr+1 )
 		REPEAT
 		DROP				\ drop final " ( addr )
-		HERE @ -			\ calculate length
-		HERE @				( len addr )
+		HERE -			\ calculate length
+		HERE				( len addr )
 		SWAP				( addr len )
 	THEN
 ; \ NOTE: HERE is not updated if not in compile mode, so very temporary
