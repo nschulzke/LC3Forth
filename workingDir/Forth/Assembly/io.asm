@@ -77,7 +77,7 @@ INPUT_file				LDR			R0,R1,#0
 						LD			R2,var_KEYECHO
 						BRz			INPUT_noecho
 					
-						OUT	( This OUT is only called when we're reading from a file. If we're not reading a file. )
+						OUT	( This OUT is only called when we're reading from a file. )
 						
 INPUT_noecho			ADD			R1,R1,#1
 						ST			R1,var_KEYSOURCE
@@ -93,8 +93,33 @@ INPUT_eof				AND			R1,R1,#0			( set KEYSOURCE back to 0 if eof )
 INPUT_CB				.BLKW		1
 key_SPACE				.FILL		#32
 }
+#primitive PARSE PARSE
+{
+						JSR			POP_R2				( delimiter )
+						LD			R3,var_BIN			( parse location )
+						JSR			_PARSE
+						JSR			PUSH_R0				( start location )
+						JSR			PUSH_R1				( length of parsed string )
+						JSR			NEXT
+						
+_PARSE					AND			R1,R1,#0			( length counter )
+
+_PARSE_loop				LDR			R0,R3,#0			( char to be parsed )
+						NOT			R0,R0
+						ADD			R0,R0,#1			( negate char )
+						ADD			R0,R0,R2			( compare to delimiter )
+						BRz			_PARSE_done
+						ADD			R1,R1,#1
+						ADD			R3,R3,#1			( increment pointer )
+						BRnzp		_PARSE_loop
+
+_PARSE_done				LD			R0,var_BIN			( return value for start )
+						ST			R3,var_BIN			( update >IN )
+						RET
+}
 #variable KEYECHO KEYECHO <#1>
 #variable KEYSOURCE KEYSOURCE <#0>
+#variable >IN BIN <KEYSOURCE>
 #primitive EMIT EMIT
 {
 						JSR			POP_R0
