@@ -88,16 +88,27 @@ HIDE QUIT
 	REPEAT
 ;
 
+: PROMPT
+		CR
+		STATE @ IF
+			SPACE SPACE
+		ELSE
+			." > "
+		THEN
+;
+
 : QUIT
 	[ LATEST @
 	>CFA QUITPTR ! ]
 	BEGIN
-		CR ." > "
+		PROMPT
 		R0 RSP!
 		KEYBUFFER ACCEPT
 		KEYBUFFER DROP KEYSOURCE !
 		INTERPRET
-		SPACE ." ok "
+		STATE @ 0= IF
+			SPACE ." ok "
+		THEN
 	AGAIN
 ;
 

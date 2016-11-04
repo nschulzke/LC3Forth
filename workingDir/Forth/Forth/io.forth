@@ -188,7 +188,7 @@
 		REPEAT
 		DROP				\ drop the final double quote
 		DUP					( addr addr )
-		HERE SWAP -		( addr length+1 ) \ we measured from length word
+		HERE SWAP -			( addr length+1 ) \ we measured from length word
 		1-					( addr length )
 		SWAP !				\ store length at location, empty stack
 	ELSE
@@ -201,7 +201,7 @@
 			1+				( addr+1 )
 		REPEAT
 		DROP				\ drop final " ( addr )
-		HERE -			\ calculate length
+		HERE -				\ calculate length
 		HERE				( len addr )
 		SWAP				( addr len )
 	THEN

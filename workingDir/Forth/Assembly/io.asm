@@ -18,9 +18,7 @@ _KEY_loop				GETC
 						LD			R2,KEY_R2
 						RET
 
-_VALID_CHAR				
-						
-						AND			R2,R2,#0
+_VALID_CHAR				AND			R2,R2,#0
 
 						LD			R1,key_PRINTABLE
 						ADD			R1,R1,R0

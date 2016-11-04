@@ -17,12 +17,25 @@ DOCOL					JSR			PUSHRSP_R6
 						AND			R6,R3,R3				; Then line them up. R6 and R3 now both point to the first real word
 						JSR			NEXT
 
-RZ
-                     LD         R0,RET_STACK_ADDRESS
-                     JSR        PUSH_R0
-                     JSR        NEXT
+; Def looks like: link name dodat word data
+DODAT					JSR			PUSHRSP_R6				; This is the address of the word after us in the caller definition
+						ADD			R3,R3,#1				; DODAT is called at codeword in definition, so increment R3 to reach next location
+						ADD			R0,R3,#1				; Get the address that follows the execution word
+						LDR			R3,R3,#0				; This address doesn't point to a codeword: LDR to get the word it points to, so NEXT will work
+						AND			R6,R3,R3				; Then line them up. R6 and R3 now both point to the destination of the pointer
+						JSR			PUSH_R0					; and push it to the stack
+						JSR			NEXT
+
 _DOCOL
                      LEA        R0,DOCOL
+                     JSR        PUSH_R0
+                     JSR        NEXT
+_DODAT
+                     LEA        R0,DODAT
+                     JSR        PUSH_R0
+                     JSR        NEXT
+RZ
+                     LD         R0,RET_STACK_ADDRESS
                      JSR        PUSH_R0
                      JSR        NEXT
 SZ
@@ -38,40 +51,40 @@ DROP
                      ADD        R4,R4,#-1
                      JSR        NEXT
 SWAP
-                     JSR        POP_R0
-                     JSR        POP_R1
-                     JSR        PUSH_R0
-                     JSR        PUSH_R1
+                     LDR        R0,R4,#0
+                     LDR        R1,R4,#-1
+                     STR        R0,R4,#-1
+                     STR        R1,R4,#0
                      JSR        NEXT
 DUP
                      LDR        R0,R4,#0
                      JSR        PUSH_R0
-                     JSR        NEXT
-OVER
-                     LDR        R0,R4,#-1
-                     JSR        PUSH_R0
-                     JSR        NEXT
-ROT
-                     JSR        POP_R0
-                     JSR        POP_R1
-                     JSR        POP_R2
-                     JSR        PUSH_R1
-                     JSR        PUSH_R0
-                     JSR        PUSH_R2
-                     JSR        NEXT
-NROT
-                     JSR        POP_R0
-                     JSR        POP_R1
-                     JSR        POP_R2
-                     JSR        PUSH_R0
-                     JSR        PUSH_R2
-                     JSR        PUSH_R1
                      JSR        NEXT
 QDUP
                      LDR        R0,R4,#0
                      BRz        QDUP_skip
                      JSR        PUSH_R0
 QDUP_skip            JSR        NEXT
+OVER
+                     LDR        R0,R4,#-1
+                     JSR        PUSH_R0
+                     JSR        NEXT
+ROT
+                     LDR        R0,R4,#0
+                     LDR        R1,R4,#-1
+                     LDR        R2,R4,#-2
+                     STR        R2,R4,#0
+                     STR        R0,R4,#-1
+                     STR        R1,R4,#-2
+                     JSR        NEXT
+NROT
+                     LDR        R0,R4,#0
+                     LDR        R1,R4,#-1
+                     LDR        R2,R4,#-2
+                     STR        R1,R4,#0
+                     STR        R2,R4,#-1
+                     STR        R0,R4,#-2
+                     JSR        NEXT
 TOR
                      JSR        POP_R3
                      JSR        PUSHRSP_R3
@@ -106,57 +119,52 @@ RFETCH
                      LDR        R0,R5,#0
                      JSR        PUSH_R0
                      JSR        NEXT
-I
-                     LDR        R0,R5,#0
+RDROP
+                     ADD        R5,R5,#-1
+                     JSR        PUSHRSP_R3
+                     JSR        NEXT
+STORE
+                     JSR        POP_R0
+                     JSR        POP_R1
+                     STR        R1,R0,#0
+                     JSR        NEXT
+FETCH
+                     JSR        POP_R0
+                     LDR        R0,R0,#0
                      JSR        PUSH_R0
                      JSR        NEXT
-J
-                     LDR        R0,R5,#-2
-                     JSR        PUSH_R0
+ADDSTORE
+                     JSR        POP_R2
+                     JSR        POP_R1
+_ADDSTORE            LDR        R0,R2,#0
+                     ADD        R0,R0,R1
+                     STR        R0,R2,#0
                      JSR        NEXT
-UNLOOP
-                     JSR        POPRSP_R3
-                     JSR        POPRSP_R3
-                     JSR        NEXT
-DO
-                     JSR        _DTOR
-                     JSR        NEXT
-LOOP
-                     AND        R3,R3,#0
-                     LDR        R1,R5,#0
+SUBSTORE
+                     JSR        POP_R2
+                     JSR        POP_R1
+                     NOT        R1,R1
                      ADD        R1,R1,#1
-                     LDR        R0,R5,#-1
-                     NOT        R2,R1
-                     ADD        R2,R2,#1
-                     ADD        R2,R2,R0
-                     BRp        LOOP_continue
-                     ADD        R3,R3,#-1
-LOOP_continue        JSR        PUSH_R3
-                     STR        R1,R5,#0
+                     JSR        _ADDSTORE
+RSPFETCH
+                     AND        R0,R0,#0
+                     ADD        R0,R0,R5
+                     JSR        PUSH_R0
                      JSR        NEXT
-INCR
-                     LDR        R0,R4,#0
-                     ADD        R0,R0,#1
-                     STR        R0,R4,#0
-                     JSR        NEXT
-DECR
-                     LDR        R0,R4,#0
-                     ADD        R0,R0,#-1
-                     STR        R0,R4,#0
-                     JSR        NEXT
-ADDF
+RSPSTORE
                      JSR        POP_R0
-                     LDR        R1,R4,#0
-                     ADD        R0,R0,R1
-                     STR        R0,R4,#0
+                     AND        R5,R5,#0
+                     ADD        R5,R5,R0
                      JSR        NEXT
-SUBTRACT
+DSPFETCH
+                     AND        R0,R0,#0
+                     ADD        R0,R0,R4
+                     JSR        PUSH_R0
+                     JSR        NEXT
+DSPSTORE
                      JSR        POP_R0
-                     NOT        R0,R0
-                     ADD        R0,R0,#1
-                     LDR        R1,R4,#0
-                     ADD        R0,R0,R1
-                     STR        R0,R4,#0
+                     AND        R4,R4,#0
+                     ADD        R4,R4,R0
                      JSR        NEXT
 ANDF
                      JSR        POP_R0
@@ -184,11 +192,14 @@ EQUAL
                      NOT        R0,R0
                      ADD        R0,R0,#1
                      ADD        R0,R0,R1
-                     BRnp       EQUAL_false
-                     ADD        R0,R0,#1
-                     BRnzp      EQUAL_finish
-EQUAL_false          AND        R0,R0,#0
-EQUAL_finish         JSR        PUSH_R0
+                     BRz        _EQUALITY_true
+                     BRnzp      _EQUALITY_false
+
+_EQUALITY_false      AND        R0,R0,#0
+                     BRnzp      _EQUALITY_finish
+_EQUALITY_true       AND        R0,R0,#0
+                     ADD        R0,R0,#-1
+_EQUALITY_finish     JSR        PUSH_R0
                      JSR        NEXT
 NEQUAL
                      JSR        POP_R0
@@ -196,117 +207,87 @@ NEQUAL
                      NOT        R0,R0
                      ADD        R0,R0,#1
                      ADD        R0,R0,R1
-                     BRz        NEQUAL_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      NEQUAL_finish
-NEQUAL_false         AND        R0,R0,#0
-NEQUAL_finish        JSR        PUSH_R0
-                     JSR        NEXT
+                     BRnp       _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 LT
                      JSR        POP_R0
                      JSR        POP_R1
                      NOT        R0,R0
                      ADD        R0,R0,#1
                      ADD        R0,R0,R1
-                     BRzp       LT_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      LT_finish
-LT_false             AND        R0,R0,#0
-LT_finish            JSR        PUSH_R0
-                     JSR        NEXT
+                     BRn        _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 GT
                      JSR        POP_R0
                      JSR        POP_R1
                      NOT        R0,R0
                      ADD        R0,R0,#1
                      ADD        R0,R0,R1
-                     BRnz       GT_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      GT_finish
-GT_false             AND        R0,R0,#0
-GT_finish            JSR        PUSH_R0
-                     JSR        NEXT
+                     BRp        _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 LTE
                      JSR        POP_R0
                      JSR        POP_R1
                      NOT        R0,R0
                      ADD        R0,R0,#1
                      ADD        R0,R0,R1
-                     BRp        LTE_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      LTE_finish
-LTE_false            AND        R0,R0,#0
-LTE_finish           JSR        PUSH_R0
-                     JSR        NEXT
+                     BRnz       _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 GTE
                      JSR        POP_R0
                      JSR        POP_R1
                      NOT        R0,R0
                      ADD        R0,R0,#1
                      ADD        R0,R0,R1
-                     BRn        GTE_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      GTE_finish
-GTE_false            AND        R0,R0,#0
-GTE_finish           JSR        PUSH_R0
-                     JSR        NEXT
+                     BRzp       _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 ZEQUAL
                      JSR        POP_R0
-                     BRnp       ZEQUAL_false
-                     ADD        R0,R0,#1
-                     BRnzp      ZEQUAL_finish
-ZEQUAL_false         AND        R0,R0,#0
-ZEQUAL_finish        JSR        PUSH_R0
-                     JSR        NEXT
+                     BRz        _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 ZNEQUAL
                      JSR        POP_R0
-                     BRz        ZNEQUAL_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      ZNEQUAL_finish
-ZNEQUAL_false        AND        R0,R0,#0
-ZNEQUAL_finish       JSR        PUSH_R0
-                     JSR        NEXT
+                     BRnp       _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 ZLT
                      JSR        POP_R0
-                     BRzp       ZLT_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      ZLT_finish
-ZLT_false            AND        R0,R0,#0
-ZLT_finish           JSR        PUSH_R0
-                     JSR        NEXT
+                     BRn        _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 ZGT
                      JSR        POP_R0
-                     BRnz       ZGT_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      ZGT_finish
-ZGT_false            AND        R0,R0,#0
-ZGT_finish           JSR        PUSH_R0
-                     JSR        NEXT
+                     BRp        _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 ZLTE
                      JSR        POP_R0
-                     BRp        ZLTE_false
-                     AND        R0,R0,#0
-                     ADD        R0,R0,#1
-                     BRnzp      ZLTE_finish
-ZLTE_false           AND        R0,R0,#0
-ZLTE_finish          JSR        PUSH_R0
-                     JSR        NEXT
+                     BRnz       _EQUALITY_true
+                     BRnzp      _EQUALITY_false
 ZGTE
                      JSR        POP_R0
-                     BRn        ZGTE_false
-                     AND        R0,R0,#0
+                     BRzp       _EQUALITY_true
+                     BRnzp      _EQUALITY_false
+INCR
+                     LDR        R0,R4,#0
                      ADD        R0,R0,#1
-                     BRnzp      ZGTE_finish
-ZGTE_false           AND        R0,R0,#0
-ZGTE_finish          JSR        PUSH_R0
+                     STR        R0,R4,#0
+                     JSR        NEXT
+DECR
+                     LDR        R0,R4,#0
+                     ADD        R0,R0,#-1
+                     STR        R0,R4,#0
+                     JSR        NEXT
+ADDF
+                     JSR        POP_R0
+                     LDR        R1,R4,#0
+                     ADD        R0,R0,R1
+                     STR        R0,R4,#0
+                     JSR        NEXT
+SUBTRACT
+                     JSR        POP_R0
+                     NOT        R0,R0
+                     ADD        R0,R0,#1
+                     LDR        R1,R4,#0
+                     ADD        R0,R0,R1
+                     STR        R0,R4,#0
                      JSR        NEXT
 MULT
                      JSR        POP_R2
@@ -432,55 +413,62 @@ SIGN_FLIP            NOT        R3,R3
                      RET        
 
 SIGN_CALLBACK        .BLKW      1
-STORE
+BRANCH
+                     LDR        R0,R6,#0
+                     ADD        R6,R6,R0
+                     JSR        NEXT
+ZBRANCH
                      JSR        POP_R0
-                     JSR        POP_R1
-                     STR        R1,R0,#0
+                     BRz        BRANCH
+                     ADD        R6,R6,#1
                      JSR        NEXT
-FETCH
-                     JSR        POP_R0
-                     LDR        R0,R0,#0
-                     JSR        PUSH_R0
-                     JSR        NEXT
-ADDSTORE
-                     JSR        POP_R2
-                     JSR        POP_R1
-                     LDR        R0,R2,#0
-                     ADD        R0,R0,R1
-                     STR        R0,R2,#0
-                     JSR        NEXT
-SUBSTORE
-                     JSR        POP_R2
-                     JSR        POP_R1
+QDO
+                     LDR        R0,R4,#0
+                     LDR        R1,R4,#-1
                      NOT        R1,R1
                      ADD        R1,R1,#1
-                     LDR        R0,R2,#0
-                     ADD        R0,R0,R1
-                     STR        R0,R2,#0
+                     ADD        R1,R1,R0
+                     BRnp       DO
+                     ADD        R4,R4,#-2
+                     BRnzp      BRANCH
+DO
+                     JSR        _DTOR
+                     ADD        R6,R6,#1
                      JSR        NEXT
-RSPFETCH
-                     AND        R0,R0,#0
-                     ADD        R0,R0,R5
+LEAVE
+                     JSR        POPRSP_R3
+                     JSR        POPRSP_R3
+                     BRnzp      BRANCH
+LOOP
+                     LDR        R1,R5,#0
+                     ADD        R1,R1,#1
+_LOOP                STR        R1,R5,#0
+                     LDR        R0,R5,#-1
+                     NOT        R1,R1
+                     ADD        R1,R1,#1
+
+                     ADD        R1,R1,R0
+                     BRp        BRANCH
+                     ADD        R6,R6,#1
+
+                     BRnzp      UNLOOP
+pLOOP
+                     LDR        R1,R5,#0
+                     JSR        POP_R2
+                     ADD        R1,R1,R2
+
+                     JSR        _LOOP
+I
+                     LDR        R0,R5,#0
                      JSR        PUSH_R0
                      JSR        NEXT
-RSPSTORE
-                     JSR        POP_R0
-                     AND        R5,R5,#0
-                     ADD        R5,R5,R0
-                     JSR        NEXT
-RDROP
-                     ADD        R5,R5,#-1
-                     JSR        PUSHRSP_R3
-                     JSR        NEXT
-DSPFETCH
-                     AND        R0,R0,#0
-                     ADD        R0,R0,R4
+J
+                     LDR        R0,R5,#-2
                      JSR        PUSH_R0
                      JSR        NEXT
-DSPSTORE
-                     JSR        POP_R0
-                     AND        R4,R4,#0
-                     ADD        R4,R4,R0
+UNLOOP
+                     JSR        POPRSP_R3
+                     JSR        POPRSP_R3
                      JSR        NEXT
 KEY
                      JSR        _KEY
@@ -526,11 +514,6 @@ key_PRINTABLE        .FILL      #-32
 KEY_CB               .BLKW      1
 KEY_R1               .BLKW      1
 KEY_R2               .BLKW      1
-KEYECHO
-                     LEA        R0,var_KEYECHO
-                     JSR        PUSH_R0
-                     JSR        NEXT
-var_KEYECHO          .FILL      #1
 INPUT
                      JSR        _INPUT
                      JSR        PUSH_R0
@@ -552,10 +535,10 @@ _INPUT               ST         R7,INPUT_CB
 INPUT_cleanup        LD         R7,INPUT_CB
                      RET        
 
-INPUT_cleanup_NL     ST         R0,var_DELAYED_NL
+INPUT_cleanup_NL     AND        R1,R0,R0
                      LD         R0,key_SPACE
                      OUT        
-                     LD         R0,var_DELAYED_NL
+                     AND        R1,R0,R0
                      BRnzp      INPUT_cleanup
 
 
@@ -580,11 +563,11 @@ INPUT_eof            AND        R1,R1,#0
 
 INPUT_CB             .BLKW      1
 key_SPACE            .FILL      #32
-DELAYED_NL
-                     LEA        R0,var_DELAYED_NL
+KEYECHO
+                     LEA        R0,var_KEYECHO
                      JSR        PUSH_R0
                      JSR        NEXT
-var_DELAYED_NL       .FILL      #0
+var_KEYECHO          .FILL      #1
 KEYSOURCE
                      LEA        R0,var_KEYSOURCE
                      JSR        PUSH_R0
@@ -631,10 +614,7 @@ LIT
                      JSR        PUSH_R0
                      JSR        NEXT
 LIT_XT
-                     LDR        R0,R6,#0
-                     ADD        R6,R6,#1
-                     JSR        PUSH_R0
-                     JSR        NEXT
+                     JSR        LIT
 LITSTRING
                      LDR        R0,R6,#0
                      ADD        R6,R6,#1
@@ -659,8 +639,6 @@ _WORD_start          JSR        _INPUT
                      NOT        R0,R1
                      ADD        R0,R0,#1
                      OUT        
-                     AND        R1,R1,#0
-                     ST         R1,var_DELAYED_NL
 
 _WORD_skip_NL        LEA        R3,_WORD_start
                      JSR        _WORD_check_white
@@ -891,6 +869,12 @@ _TCFA                AND        R1,R1,#0
                      ADD        R0,R0,#2
                      ADD        R0,R0,R1
                      RET        
+TDFA
+                     JSR        POP_R0
+                     JSR        _TCFA
+                     ADD        R0,R0,#1
+                     JSR        PUSH_R0
+                     JSR        NEXT
 PARSE_ERROR
                      LEA        R0,const_PARSE_ERROR
                      JSR        PUSH_R0
@@ -916,38 +900,37 @@ _F_LENMASK
                      JSR        NEXT
 F_LENMASK            .FILL      x1f
 _HEADER
-                     JSR        POP_R0
-                     JSR        POP_R1
-                     LD         R2,var_HERE
+                     JSR        _WORD
+                     LD         R0,var_DP
                      LD         R3,var_LATEST
-                     STR        R3,R2,#0
-                     ADD        R2,R2,#1
-                     STR        R0,R2,#0
-                     ADD        R2,R2,#1
+                     STR        R3,R0,#0
+                     ADD        R0,R0,#1
+                     STR        R1,R0,#0
+                     ADD        R0,R0,#1
 
-_CREATE_copy_loop    LDR        R3,R1,#0
-                     STR        R3,R2,#0
+_CREATE_copy_loop    LDR        R3,R2,#0
+                     STR        R3,R0,#0
+                     ADD        R0,R0,#1
                      ADD        R2,R2,#1
-                     ADD        R1,R1,#1
-                     ADD        R0,R0,#-1
+                     ADD        R1,R1,#-1
                      BRp        _CREATE_copy_loop
 
-                     STR        R0,R2,#0
-                     ADD        R2,R2,#1
+                     STR        R1,R0,#0
+                     ADD        R0,R0,#1
 
-                     LD         R0,var_HERE
-                     ST         R0,var_LATEST
-                     ST         R2,var_HERE
+                     LD         R1,var_DP
+                     ST         R1,var_LATEST
+                     ST         R0,var_DP
                      JSR        NEXT
 COMMA
                      JSR        POP_R0
                      JSR        _COMMA
                      JSR        NEXT
 
-_COMMA               LD         R1,var_HERE
+_COMMA               LD         R1,var_DP
                      STR        R0,R1,#0
                      ADD        R1,R1,#1
-                     ST         R1,var_HERE
+                     ST         R1,var_DP
                      RET        
 LBRAC
                      AND        R0,R0,#0
@@ -957,15 +940,6 @@ RBRAC
                      AND        R0,R0,#0
                      ADD        R0,R0,#1
                      ST         R0,var_STATE
-                     JSR        NEXT
-BRANCH
-                     LDR        R0,R6,#0
-                     ADD        R6,R6,R0
-                     JSR        NEXT
-ZBRANCH
-                     JSR        POP_R0
-                     BRz        BRANCH
-                     ADD        R6,R6,#1
                      JSR        NEXT
 STATE
                      LEA        R0,var_STATE
@@ -977,16 +951,20 @@ BASE
                      JSR        PUSH_R0
                      JSR        NEXT
 var_BASE             .FILL      #10
-HERE
-                     LEA        R0,var_HERE
-                     JSR        PUSH_R0
-                     JSR        NEXT
-var_HERE             .FILL      USER_DATA
 QUITPTR
                      LEA        R0,var_QUITPTR
                      JSR        PUSH_R0
                      JSR        NEXT
 var_QUITPTR          .FILL      code_QUIT
+HERE
+                     LD         R0,var_DP
+                     JSR        PUSH_R0
+                     JSR        NEXT
+DP
+                     LEA        R0,var_DP
+                     JSR        PUSH_R0
+                     JSR        NEXT
+var_DP               .FILL      USER_DATA
 LATEST
                      LEA        R0,var_LATEST
                      JSR        PUSH_R0
@@ -1096,8 +1074,8 @@ EMPTY_STACK				LEA			R0,EMPTY_STACK_ERR
 						PUTS
 						AND			R2,R2,#0
 						STI			R2,EMPTY_STACK_KEYSOURCE
-						LD		R0,ABORT_addr
-						JMP		R0
+						LD			R0,ABORT_addr
+						JMP			R0
 
 ABORT_addr				.FILL		RESET
 EMPTY_STACK_KEYSOURCE	.FILL		var_KEYSOURCE
@@ -1112,15 +1090,19 @@ RETURN_STACK			.BLKW		64
 DATA_STACK				.BLKW		512
 
 name_END_OF_DICT     .FILL      #0
-name_RZ              .FILL      name_END_OF_DICT
-                     .FILL      #2
-                     .STRINGZ   "R0"
-code_RZ              .FILL      RZ
-name__DOCOL          .FILL      name_RZ
+name__DOCOL          .FILL      name_END_OF_DICT
                      .FILL      #5
                      .STRINGZ   "DOCOL"
 code__DOCOL          .FILL      _DOCOL
-name_SZ              .FILL      name__DOCOL
+name__DODAT          .FILL      name__DOCOL
+                     .FILL      #5
+                     .STRINGZ   "DODAT"
+code__DODAT          .FILL      _DODAT
+name_RZ              .FILL      name__DODAT
+                     .FILL      #2
+                     .STRINGZ   "R0"
+code_RZ              .FILL      RZ
+name_SZ              .FILL      name_RZ
                      .FILL      #2
                      .STRINGZ   "S0"
 code_SZ              .FILL      SZ
@@ -1140,7 +1122,11 @@ name_DUP             .FILL      name_SWAP
                      .FILL      #3
                      .STRINGZ   "DUP"
 code_DUP             .FILL      DUP
-name_OVER            .FILL      name_DUP
+name_QDUP            .FILL      name_DUP
+                     .FILL      #4
+                     .STRINGZ   "?DUP"
+code_QDUP            .FILL      QDUP
+name_OVER            .FILL      name_QDUP
                      .FILL      #4
                      .STRINGZ   "OVER"
 code_OVER            .FILL      OVER
@@ -1152,11 +1138,7 @@ name_NROT            .FILL      name_ROT
                      .FILL      #4
                      .STRINGZ   "-ROT"
 code_NROT            .FILL      NROT
-name_QDUP            .FILL      name_NROT
-                     .FILL      #4
-                     .STRINGZ   "?DUP"
-code_QDUP            .FILL      QDUP
-name_TOR             .FILL      name_QDUP
+name_TOR             .FILL      name_NROT
                      .FILL      #2
                      .STRINGZ   ">R"
 code_TOR             .FILL      TOR
@@ -1176,43 +1158,43 @@ name_RFETCH          .FILL      name_DTOR
                      .FILL      #2
                      .STRINGZ   "R@"
 code_RFETCH          .FILL      RFETCH
-name_I               .FILL      name_RFETCH
+name_RDROP           .FILL      name_RFETCH
+                     .FILL      #5
+                     .STRINGZ   "RDROP"
+code_RDROP           .FILL      RDROP
+name_STORE           .FILL      name_RDROP
                      .FILL      #1
-                     .STRINGZ   "I"
-code_I               .FILL      I
-name_J               .FILL      name_I
+                     .STRINGZ   "!"
+code_STORE           .FILL      STORE
+name_FETCH           .FILL      name_STORE
                      .FILL      #1
-                     .STRINGZ   "J"
-code_J               .FILL      J
-name_UNLOOP          .FILL      name_J
-                     .FILL      #6
-                     .STRINGZ   "UNLOOP"
-code_UNLOOP          .FILL      UNLOOP
-name_DO              .FILL      name_UNLOOP
+                     .STRINGZ   "@"
+code_FETCH           .FILL      FETCH
+name_ADDSTORE        .FILL      name_FETCH
+                     .FILL      #2
+                     .STRINGZ   "+!"
+code_ADDSTORE        .FILL      ADDSTORE
+name_SUBSTORE        .FILL      name_ADDSTORE
+                     .FILL      #2
+                     .STRINGZ   "-!"
+code_SUBSTORE        .FILL      SUBSTORE
+name_RSPFETCH        .FILL      name_SUBSTORE
                      .FILL      #4
-                     .STRINGZ   "(DO)"
-code_DO              .FILL      DO
-name_LOOP            .FILL      name_DO
-                     .FILL      #6
-                     .STRINGZ   "(LOOP)"
-code_LOOP            .FILL      LOOP
-name_INCR            .FILL      name_LOOP
-                     .FILL      #2
-                     .STRINGZ   "1+"
-code_INCR            .FILL      INCR
-name_DECR            .FILL      name_INCR
-                     .FILL      #2
-                     .STRINGZ   "1-"
-code_DECR            .FILL      DECR
-name_ADDF            .FILL      name_DECR
-                     .FILL      #1
-                     .STRINGZ   "+"
-code_ADDF            .FILL      ADDF
-name_SUBTRACT        .FILL      name_ADDF
-                     .FILL      #1
-                     .STRINGZ   "-"
-code_SUBTRACT        .FILL      SUBTRACT
-name_ANDF            .FILL      name_SUBTRACT
+                     .STRINGZ   "RSP@"
+code_RSPFETCH        .FILL      RSPFETCH
+name_RSPSTORE        .FILL      name_RSPFETCH
+                     .FILL      #4
+                     .STRINGZ   "RSP!"
+code_RSPSTORE        .FILL      RSPSTORE
+name_DSPFETCH        .FILL      name_RSPSTORE
+                     .FILL      #4
+                     .STRINGZ   "DSP@"
+code_DSPFETCH        .FILL      DSPFETCH
+name_DSPSTORE        .FILL      name_DSPFETCH
+                     .FILL      #4
+                     .STRINGZ   "DSP!"
+code_DSPSTORE        .FILL      DSPSTORE
+name_ANDF            .FILL      name_DSPSTORE
                      .FILL      #3
                      .STRINGZ   "AND"
 code_ANDF            .FILL      ANDF
@@ -1304,7 +1286,23 @@ name_ZGTE            .FILL      name_ZLTE
                      .FILL      #3
                      .STRINGZ   "0>="
 code_ZGTE            .FILL      ZGTE
-name_MULT            .FILL      name_ZGTE
+name_INCR            .FILL      name_ZGTE
+                     .FILL      #2
+                     .STRINGZ   "1+"
+code_INCR            .FILL      INCR
+name_DECR            .FILL      name_INCR
+                     .FILL      #2
+                     .STRINGZ   "1-"
+code_DECR            .FILL      DECR
+name_ADDF            .FILL      name_DECR
+                     .FILL      #1
+                     .STRINGZ   "+"
+code_ADDF            .FILL      ADDF
+name_SUBTRACT        .FILL      name_ADDF
+                     .FILL      #1
+                     .STRINGZ   "-"
+code_SUBTRACT        .FILL      SUBTRACT
+name_MULT            .FILL      name_SUBTRACT
                      .FILL      #1
                      .STRINGZ   "*"
 code_MULT            .FILL      MULT
@@ -1312,59 +1310,59 @@ name_DIVMOD          .FILL      name_MULT
                      .FILL      #4
                      .STRINGZ   "/MOD"
 code_DIVMOD          .FILL      DIVMOD
-name_STORE           .FILL      name_DIVMOD
-                     .FILL      #1
-                     .STRINGZ   "!"
-code_STORE           .FILL      STORE
-name_FETCH           .FILL      name_STORE
-                     .FILL      #1
-                     .STRINGZ   "@"
-code_FETCH           .FILL      FETCH
-name_ADDSTORE        .FILL      name_FETCH
-                     .FILL      #2
-                     .STRINGZ   "+!"
-code_ADDSTORE        .FILL      ADDSTORE
-name_SUBSTORE        .FILL      name_ADDSTORE
-                     .FILL      #2
-                     .STRINGZ   "-!"
-code_SUBSTORE        .FILL      SUBSTORE
-name_RSPFETCH        .FILL      name_SUBSTORE
-                     .FILL      #4
-                     .STRINGZ   "RSP@"
-code_RSPFETCH        .FILL      RSPFETCH
-name_RSPSTORE        .FILL      name_RSPFETCH
-                     .FILL      #4
-                     .STRINGZ   "RSP!"
-code_RSPSTORE        .FILL      RSPSTORE
-name_RDROP           .FILL      name_RSPSTORE
+name_BRANCH          .FILL      name_DIVMOD
+                     .FILL      #6
+                     .STRINGZ   "BRANCH"
+code_BRANCH          .FILL      BRANCH
+name_ZBRANCH         .FILL      name_BRANCH
+                     .FILL      #7
+                     .STRINGZ   "0BRANCH"
+code_ZBRANCH         .FILL      ZBRANCH
+name_QDO             .FILL      name_ZBRANCH
                      .FILL      #5
-                     .STRINGZ   "RDROP"
-code_RDROP           .FILL      RDROP
-name_DSPFETCH        .FILL      name_RDROP
+                     .STRINGZ   "(?DO)"
+code_QDO             .FILL      QDO
+name_DO              .FILL      name_QDO
                      .FILL      #4
-                     .STRINGZ   "DSP@"
-code_DSPFETCH        .FILL      DSPFETCH
-name_DSPSTORE        .FILL      name_DSPFETCH
-                     .FILL      #4
-                     .STRINGZ   "DSP!"
-code_DSPSTORE        .FILL      DSPSTORE
-name_KEY             .FILL      name_DSPSTORE
+                     .STRINGZ   "(DO)"
+code_DO              .FILL      DO
+name_LEAVE           .FILL      name_DO
+                     .FILL      #7
+                     .STRINGZ   "(LEAVE)"
+code_LEAVE           .FILL      LEAVE
+name_LOOP            .FILL      name_LEAVE
+                     .FILL      #6
+                     .STRINGZ   "(LOOP)"
+code_LOOP            .FILL      LOOP
+name_pLOOP           .FILL      name_LOOP
+                     .FILL      #7
+                     .STRINGZ   "(+LOOP)"
+code_pLOOP           .FILL      pLOOP
+name_I               .FILL      name_pLOOP
+                     .FILL      #1
+                     .STRINGZ   "I"
+code_I               .FILL      I
+name_J               .FILL      name_I
+                     .FILL      #1
+                     .STRINGZ   "J"
+code_J               .FILL      J
+name_UNLOOP          .FILL      name_J
+                     .FILL      #6
+                     .STRINGZ   "UNLOOP"
+code_UNLOOP          .FILL      UNLOOP
+name_KEY             .FILL      name_UNLOOP
                      .FILL      #3
                      .STRINGZ   "KEY"
 code_KEY             .FILL      KEY
-name_KEYECHO         .FILL      name_KEY
-                     .FILL      #7
-                     .STRINGZ   "KEYECHO"
-code_KEYECHO         .FILL      KEYECHO
-name_INPUT           .FILL      name_KEYECHO
+name_INPUT           .FILL      name_KEY
                      .FILL      #5
                      .STRINGZ   "INPUT"
 code_INPUT           .FILL      INPUT
-name_DELAYED_NL      .FILL      name_INPUT
-                     .FILL      #10
-                     .STRINGZ   "DELAYED_NL"
-code_DELAYED_NL      .FILL      DELAYED_NL
-name_KEYSOURCE       .FILL      name_DELAYED_NL
+name_KEYECHO         .FILL      name_INPUT
+                     .FILL      #7
+                     .STRINGZ   "KEYECHO"
+code_KEYECHO         .FILL      KEYECHO
+name_KEYSOURCE       .FILL      name_KEYECHO
                      .FILL      #9
                      .STRINGZ   "KEYSOURCE"
 code_KEYSOURCE       .FILL      KEYSOURCE
@@ -1412,7 +1410,11 @@ name_TCFA            .FILL      name_FIND
                      .FILL      #4
                      .STRINGZ   ">CFA"
 code_TCFA            .FILL      TCFA
-name_PARSE_ERROR     .FILL      name_TCFA
+name_TDFA            .FILL      name_TCFA
+                     .FILL      #4
+                     .STRINGZ   ">DFA"
+code_TDFA            .FILL      TDFA
+name_PARSE_ERROR     .FILL      name_TDFA
                      .FILL      #11
                      .STRINGZ   "PARSE_ERROR"
 code_PARSE_ERROR     .FILL      PARSE_ERROR
@@ -1433,8 +1435,8 @@ name__F_LENMASK      .FILL      name__F_HIDDEN
                      .STRINGZ   "F_LENMASK"
 code__F_LENMASK      .FILL      _F_LENMASK
 name__HEADER         .FILL      name__F_LENMASK
-                     .FILL      #8
-                     .STRINGZ   "(HEADER)"
+                     .FILL      #6
+                     .STRINGZ   "HEADER"
 code__HEADER         .FILL      _HEADER
 name_COMMA           .FILL      name__HEADER
                      .FILL      #1
@@ -1448,15 +1450,7 @@ name_RBRAC           .FILL      name_LBRAC
                      .FILL      #1
                      .STRINGZ   "]"
 code_RBRAC           .FILL      RBRAC
-name_BRANCH          .FILL      name_RBRAC
-                     .FILL      #6
-                     .STRINGZ   "BRANCH"
-code_BRANCH          .FILL      BRANCH
-name_ZBRANCH         .FILL      name_BRANCH
-                     .FILL      #7
-                     .STRINGZ   "0BRANCH"
-code_ZBRANCH         .FILL      ZBRANCH
-name_STATE           .FILL      name_ZBRANCH
+name_STATE           .FILL      name_RBRAC
                      .FILL      #5
                      .STRINGZ   "STATE"
 code_STATE           .FILL      STATE
@@ -1464,15 +1458,19 @@ name_BASE            .FILL      name_STATE
                      .FILL      #4
                      .STRINGZ   "BASE"
 code_BASE            .FILL      BASE
-name_HERE            .FILL      name_BASE
-                     .FILL      #4
-                     .STRINGZ   "HERE"
-code_HERE            .FILL      HERE
-name_QUITPTR         .FILL      name_HERE
+name_QUITPTR         .FILL      name_BASE
                      .FILL      #7
                      .STRINGZ   "QUITPTR"
 code_QUITPTR         .FILL      QUITPTR
-name_whac            .FILL      name_QUITPTR
+name_HERE            .FILL      name_QUITPTR
+                     .FILL      #4
+                     .STRINGZ   "HERE"
+code_HERE            .FILL      HERE
+name_DP              .FILL      name_HERE
+                     .FILL      #2
+                     .STRINGZ   "DP"
+code_DP              .FILL      DP
+name_whac            .FILL      name_DP
                      .FILL      #129
                      .STRINGZ   "\\"
 code_whac            .FILL      DOCOL
@@ -1491,20 +1489,13 @@ code_LOAD            .FILL      DOCOL
                      .FILL      code_KEYSOURCE
                      .FILL      code_STORE
                      .FILL      code_EXIT
-name_HEADER          .FILL      name_LOAD
-                     .FILL      #6
-                     .STRINGZ   "HEADER"
-code_HEADER          .FILL      DOCOL
-                     .FILL      code_WORD
-                     .FILL      code__HEADER
-                     .FILL      code__DOCOL
-                     .FILL      code_COMMA
-                     .FILL      code_EXIT
-name_colo            .FILL      name_HEADER
+name_colo            .FILL      name_LOAD
                      .FILL      #1
                      .STRINGZ   ":"
 code_colo            .FILL      DOCOL
-                     .FILL      code_HEADER
+                     .FILL      code__HEADER
+                     .FILL      code__DOCOL
+                     .FILL      code_COMMA
                      .FILL      code_LATEST
                      .FILL      code_FETCH
                      .FILL      code_HIDDEN
@@ -1555,10 +1546,6 @@ code_QUIT            .FILL      DOCOL
                      .FILL      code_LIT
                      .FILL      #10
                      .FILL      code_EMIT
-                     .FILL      code_LIT
-                     .FILL      #0
-                     .FILL      code_DELAYED_NL
-                     .FILL      code_STORE
                      .FILL      code_RZ
                      .FILL      code_RSPSTORE
                      .FILL      code_INTERPRET
@@ -1639,17 +1626,6 @@ code_INTERPRET       .FILL      DOCOL
                      .FILL      code_LIT
                      .FILL      code_COMMA
                      .FILL      code_COMMA
-                     .FILL      code_DELAYED_NL
-                     .FILL      code_FETCH
-                     .FILL      code_ZBRANCH
-                     .FILL      #8
-                     .FILL      code_LIT
-                     .FILL      #10
-                     .FILL      code_EMIT
-                     .FILL      code_LIT
-                     .FILL      #0
-                     .FILL      code_DELAYED_NL
-                     .FILL      code_STORE
                      .FILL      code_EXIT
 name_LATEST          .FILL      name_INTERPRET
                      .FILL      #6
