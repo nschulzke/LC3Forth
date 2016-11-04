@@ -1,12 +1,13 @@
-128 ARRAY KEYBUFFER
+VARIABLE KEYBUFFER 127 ALLOT
 
 : SOURCE
 	KEYBUFFER
+	128
 ;
 
 ( addr maxlen )
 : ACCEPT
-	0 KEYSOURCE !
+	0 >IN !
 	DROP				( addr )
 	\ We wont use the length: the spec says not to terminate when we reach it anyway...
 	BEGIN
@@ -14,7 +15,7 @@
 		DUP 8 = IF		\ backspace functionality
 			171 EMIT			\ Emit <<
 			SWAP				( key addr )
-			DUP KEYBUFFER DROP >		( addr addr>keybuffer? )
+			DUP KEYBUFFER >		( addr addr>keybuffer? )
 			IF			\ if we haven't hit the bottom of the buffer yet
 				1 -
 			THEN
@@ -54,9 +55,9 @@ HIDE QUIT
 
 : INTERPRET
 	BEGIN
-		KEYSOURCE @
+		>IN @
 		SKIP_BLANKS
-		DUP KEYSOURCE !
+		DUP >IN !
 		@
 	WHILE
 		WORD
@@ -103,8 +104,8 @@ HIDE QUIT
 	BEGIN
 		PROMPT
 		R0 RSP!
-		KEYBUFFER ACCEPT
-		KEYBUFFER DROP KEYSOURCE !
+		SOURCE ACCEPT
+		KEYBUFFER >IN !
 		INTERPRET
 		STATE @ 0= IF
 			SPACE ." ok "

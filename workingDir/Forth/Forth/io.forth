@@ -1,3 +1,22 @@
+( addr u char -- )
+: FILL
+	SWAP			( addr char u )
+	0 ?DO
+		OVER I +	( addr char addr+i )
+		OVER SWAP !	( addr char )
+	LOOP
+	2DROP
+;
+
+( addr1 addr2 u -- )
+: MOVE
+	0 ?DO
+		OVER I + @	( addr1 addr2 val[i] )
+		OVER I + !	( addr1 addr2 )
+	LOOP
+	2DROP
+;
+
 : [CHAR] IMMEDIATE INPUT POSTPONE LITERAL ;
 : '"' [CHAR] " ;
 : ':' [CHAR] : ;
@@ -176,45 +195,33 @@
 ;
 
 : S" IMMEDIATE
+	[CHAR] " PARSE			( addr len )
 	STATE @ IF				\ Are we compiling?
 		POSTPONE LITSTRING	\ append LITSTRING
-		HERE				( addr )
-		0 ,					\ we don't yet know length, dummy value
-		BEGIN
-			INPUT			\ next char
-			DUP '"'	
-		<> WHILE			\ as long as not close quote, continue
-			,				\ compile character
-		REPEAT
-		DROP				\ drop the final double quote
-		DUP					( addr addr )
-		HERE SWAP -			( addr length+1 ) \ we measured from length word
-		1-					( addr length )
-		SWAP !				\ store length at location, empty stack
-	ELSE
-		HERE				( addr )
-		BEGIN
-			INPUT			\ same as above
-			DUP '"'
-		<> WHILE
-			OVER !			\ store char @ addr
-			1+				( addr+1 )
-		REPEAT
-		DROP				\ drop final " ( addr )
-		HERE -				\ calculate length
-		HERE				( len addr )
-		SWAP				( addr len )
+		DUP ,				\ compile length
+		HERE SWAP			( addr here len )
+		DUP DP +!
+		MOVE				\ move the string from the buffer to the definition
 	THEN
 ; \ NOTE: HERE is not updated if not in compile mode, so very temporary
 
 : ." IMMEDIATE
-	POSTPONE S"			\ get the string
 	STATE @ IF			\ are we compiling?
+		POSTPONE S"		\ get the string
 		POSTPONE TELL	\ compile TELL
-	ELSE
-		SPACE
-		TELL			\ print out the string
 	THEN
+;
+
+: .( IMMEDIATE
+	[CHAR] ) PARSE TELL
+;
+
+: \ IMMEDIATE
+	NL PARSE 2DROP
+;
+
+: ( IMMEDIATE
+	[CHAR] ) PARSE 2DROP
 ;
 
 : ABORT

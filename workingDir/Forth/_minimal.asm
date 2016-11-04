@@ -12,15 +12,8 @@
 
 #binary _stdLib.forth
 
-: \ IMMEDIATE
-	INPUT
-	10 = ( repeat until NL )
-	0BRANCH
-	<#-5>
-;
-
 : LOAD
-	FILELOC KEYSOURCE !
+	FILELOC >IN !
 ;
 
 : :
@@ -94,10 +87,10 @@
 		0BRANCH				( if err == 0, we found a number! )
 		<#14>
 			DROP PARSE_ERROR EMITS  ( Not a number, emit a parse error and drop the number )
-			KEYSOURCE @
+			>IN @
 			0BRANCH
 			<#5>
-				0 KEYSOURCE !
+				0 >IN !
 		BRANCH
 		<#9>
 			STATE @

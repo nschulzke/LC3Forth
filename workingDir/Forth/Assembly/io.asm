@@ -50,7 +50,7 @@ KEY_R2					.BLKW		1
 						
 _INPUT					ST			R7,INPUT_CB
 						
-						LD			R1,var_KEYSOURCE
+						LD			R1,var_BIN
 						BRnp		INPUT_file
 
 						JSR			_KEY
@@ -80,11 +80,12 @@ INPUT_file				LDR			R0,R1,#0
 						OUT	( This OUT is only called when we're reading from a file. )
 						
 INPUT_noecho			ADD			R1,R1,#1
-						ST			R1,var_KEYSOURCE
+						ST			R1,var_BIN
+						ST			R1,var_BIN
 						BRnzp		INPUT_cleanup
 						
-INPUT_eof				AND			R1,R1,#0			( set KEYSOURCE back to 0 if eof )
-						ST			R1,var_KEYSOURCE	( and we're going to want to read the next key from the keyboard )
+INPUT_eof				AND			R1,R1,#0			( set BIN back to 0 if eof )
+						ST			R1,var_BIN	( and we're going to want to read the next key from the keyboard )
 						LD			R0,key_NL
 						NOT			R0,R0
 						ADD			R0,R0,#1
@@ -105,12 +106,12 @@ key_SPACE				.FILL		#32
 _PARSE					AND			R1,R1,#0			( length counter )
 
 _PARSE_loop				LDR			R0,R3,#0			( char to be parsed )
+						ADD			R3,R3,#1			( increment pointer )
 						NOT			R0,R0
 						ADD			R0,R0,#1			( negate char )
 						ADD			R0,R0,R2			( compare to delimiter )
 						BRz			_PARSE_done
-						ADD			R1,R1,#1
-						ADD			R3,R3,#1			( increment pointer )
+						ADD			R1,R1,#1			( add one char if not done )
 						BRnzp		_PARSE_loop
 
 _PARSE_done				LD			R0,var_BIN			( return value for start )
@@ -118,8 +119,7 @@ _PARSE_done				LD			R0,var_BIN			( return value for start )
 						RET
 }
 #variable KEYECHO KEYECHO <#1>
-#variable KEYSOURCE KEYSOURCE <#0>
-#variable >IN BIN <KEYSOURCE>
+#variable >IN BIN <#0>
 #primitive EMIT EMIT
 {
 						JSR			POP_R0
