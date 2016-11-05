@@ -24,6 +24,10 @@ _VALID_CHAR				AND			R2,R2,#0
 						ADD			R1,R1,R0
 						BRzp		_V_CH_cleanup	( 31+ is good )
 						
+						LD			R1,key_ESC
+						ADD			R1,R1,R0
+						BRz			_V_CH_cleanup	( 27 is esc, we'll keep it )
+						
 						LD			R1,key_BKSPC
 						ADD			R1,R1,R0
 						BRn			_V_CH_badchar	( < 8 is bad )
@@ -36,6 +40,7 @@ _V_CH_badchar			ADD			R2,R2,#1
 _V_CH_cleanup			RET
 
 key_BKSPC				.FILL		#-8
+key_ESC					.FILL		#-27
 key_NL					.FILL		#-10
 key_PRINTABLE			.FILL		#-32
 KEY_CB					.BLKW		1
