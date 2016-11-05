@@ -99,35 +99,6 @@ INPUT_eof				AND			R1,R1,#0			( set BIN back to 0 if eof )
 INPUT_CB				.BLKW		1
 key_SPACE				.FILL		#32
 }
-#primitive REFILL REFILL
-{
-						JSR			_REFILL
-						JSR			PUSH_R1
-						JSR			NEXT
-						
-_REFILL					ST			R7,REFILL_CB
-						
-						LD			R1,var_BIN
-						BRz			_REFILL_loop
-						AND			R1,R1,#0
-						RET
-						
-_REFILL_loop			JSR			_KEY
-						STR			R0,R1,#0
-						ADD			R1,R1,#1
-						LD			R2,key_NL
-						ADD			R2,R2,R0
-						BRz			_REFILL_nl		( 8 <= c <= 10 is good )
-						OUT
-						BRnzp		_REFILL_loop
-_REFILL_nl				LD			R0,key_SPACE
-						OUT
-						
-						LD			R7,REFILL_CB
-						RET
-						
-REFILL_CB				.BLKW		1
-}
 #primitive PARSE PARSE
 {
 						JSR			POP_R2				( delimiter )
