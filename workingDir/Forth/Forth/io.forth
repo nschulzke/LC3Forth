@@ -139,7 +139,7 @@
 	2DROP
 ;
 
-: CLS
+: PAGE
 	ROWS 1 DO
 		CR
 	LOOP

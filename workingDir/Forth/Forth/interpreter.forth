@@ -143,7 +143,7 @@ HIDE QUIT
 3 CONSTANT VERSION
 
 : WELCOME
-	CLS
+	PAGE
 	." 	Welcome to version " VERSION . ." of LC3-FORTH!
 	This FORTH was built as a class project by
 	Nathan Schulzke for CS 2810. It functions as a
