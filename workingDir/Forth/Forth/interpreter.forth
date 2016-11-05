@@ -5,6 +5,35 @@ VARIABLE KEYBUFFER 127 ALLOT
 	128
 ;
 
+8 CONSTANT BKSP
+27 CONSTANT ESC
+
+( bufferAddr char -- bufferAddr char )
+: HANDLECHAR
+	DUP BKSP = IF
+		SWAP				( char addr )
+		DUP KEYBUFFER >		( char addr addr>keybuffer? )
+		IF					\ if we haven't hit the bottom of the buffer yet
+			171 EMIT		\ Emit <<
+			1 -				( char addr-1 )
+		THEN
+		SWAP				( addr char )
+		EXIT
+	THEN
+	DUP ESC = IF
+		167 EMIT
+		2DROP
+		QUITPTR @ EXECUTE
+	THEN
+	DUP NL = IF
+		SPACE				( addr char )
+	ELSE
+		DUP EMIT
+	THEN
+	2DUP SWAP !		( addr key )
+	SWAP 1+ SWAP 	( addr+1 key )
+;
+
 ( addr maxlen )
 : ACCEPT
 	0 >IN !
@@ -12,21 +41,7 @@ VARIABLE KEYBUFFER 127 ALLOT
 	\ We wont use the length: the spec says not to terminate when we reach it anyway...
 	BEGIN
 		KEY				( addr key )
-		DUP 8 = IF		\ backspace functionality
-			171 EMIT			\ Emit <<
-			SWAP				( key addr )
-			DUP KEYBUFFER >		( addr addr>keybuffer? )
-			IF			\ if we haven't hit the bottom of the buffer yet
-				1 -
-			THEN
-			SWAP				( addr-1 key )
-		ELSE
-			DUP NL = UNLESS
-				DUP EMIT
-			ELSE SPACE THEN
-			2DUP SWAP !		( addr key )
-			SWAP 1+ SWAP 	( addr+1 key )
-		THEN
+		HANDLECHAR
 		NL =
 	UNTIL
 	0 SWAP !			\ null terminator
@@ -53,6 +68,14 @@ VARIABLE KEYBUFFER 127 ALLOT
 HIDE INTERPRET
 HIDE QUIT
 
+( addr len -- )
+: ERROR" IMMEDIATE
+	POSTPONE CR
+	POSTPONE ."
+	POSTPONE TELL
+	POSTPONE ABORT
+;
+
 : INTERPRET
 	BEGIN
 		>IN @
@@ -76,8 +99,12 @@ HIDE QUIT
 			2DUP						( addr len addr len )
 			NUMBER						( addr len num err )
 			IF	\ if err				( addr len num )
-				DROP					( addr num )
-				CR ." Unknown word: " TELL	\ if there was an error, abort
+				DROP					( addr len )
+				STATE @ IF
+					FALSE STATE !		\ No longer compiling
+					LATEST @ (FORGET)	\ Erase the word
+				THEN
+				ERROR" Unknown word: " 	\ if there was an error, abort
 				ABORT
 			ELSE
 				NIP NIP					( addr len num -- num )
