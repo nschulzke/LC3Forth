@@ -7,7 +7,7 @@
 _KEY					ST			R7,KEY_CB
 						ST			R1,KEY_R1
 						ST			R2,KEY_R2
-
+						
 _KEY_loop				GETC
 						JSR			_VALID_CHAR
 						AND			R2,R2,R2
@@ -146,10 +146,6 @@ _PARSE_loop				LDR			R0,R3,#0			( char to be parsed )
 						ADD			R0,R0,R2			( compare to delimiter )
 						BRz			_PARSE_done
 						ADD			R1,R1,#1			( add one char if not done )
-						
-						LD			R2,var_KEYECHO
-						BRz			_PARSE_noecho
-						OUT	( This OUT is only called when we're reading from a file. )
 _PARSE_noecho			BRnzp		_PARSE_loop
 						
 _PARSE_done				LD			R0,var_BIN			( return value for start )
