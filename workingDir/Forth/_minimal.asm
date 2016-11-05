@@ -12,6 +12,10 @@
 
 #binary _stdLib.forth
 
+: \ IMMEDIATE
+	10 PARSE DROP DROP
+;
+
 : LOAD
 	FILELOC >IN !
 ;
