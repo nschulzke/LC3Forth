@@ -1,12 +1,8 @@
-: (FORGET)
-	DUP @ LATEST !	\ make LATEST point to the word above it
-	DP !			\ and move our current data up to that point
-;
-
 : FORGET
 	WORD FIND			\ find the word
 	?DUP 0= ABORT" Couldn't find word"
-	(FORGET)
+	DUP @ LATEST !	\ make LATEST point to the word above it
+	DP !			\ and move our current data up to that point
 ;
 
 : BOUNDS
