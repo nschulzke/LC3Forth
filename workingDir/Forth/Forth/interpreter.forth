@@ -5,9 +5,6 @@ VARIABLE KEYBUFFER 127 ALLOT
 	128
 ;
 
-8 CONSTANT BKSP
-27 CONSTANT ESC
-
 ( bufferAddr char -- bufferAddr char )
 : HANDLECHAR
 	DUP BKSP = IF
@@ -23,7 +20,7 @@ VARIABLE KEYBUFFER 127 ALLOT
 	DUP ESC = IF
 		167 EMIT
 		2DROP
-		QUITPTR @ EXECUTE
+		QP @ EXECUTE
 	THEN
 	DUP NL = IF
 		SPACE				( addr char )
@@ -66,7 +63,7 @@ VARIABLE KEYBUFFER 127 ALLOT
 ;
 
 HIDE INTERPRET
-HIDE QUIT
+HIDE BOOT
 
 ( addr len -- )
 : ERROR" IMMEDIATE
@@ -126,7 +123,7 @@ HIDE QUIT
 
 : QUIT
 	[ LATEST @
-	>CFA QUITPTR ! ]
+	>CFA QP ! ]
 	BEGIN
 		PROMPT
 		R0 RSP!
@@ -143,14 +140,14 @@ HIDE QUIT
 
 : WELCOME
 	PAGE
-	." Welcome to version " VERSION . ." of LC3-FORTH!" CR
-	." This FORTH was built as a class project by" CR
-	." Nathan Schulzke for CS 2810. It functions as a" CR
-	." complete operating system for the LC-3." CR
+	TAB ." Welcome to version " VERSION . ." of LC3-FORTH!" CR
+	TAB ." This FORTH was built as a class project by" CR
+	TAB ." Nathan Schulzke for CS 2810. It functions as a" CR
+	TAB ." complete operating system for the LC-3." CR
 	CR
-	." Type WORDS to get a list of available commands." CR
+	TAB ." Type WORDS to get a list of available commands." CR
 	CR
-	." Enjoy!"
+	TAB ." Enjoy!"
 	CR
 	QUIT
 ;

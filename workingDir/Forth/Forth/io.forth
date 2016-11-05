@@ -24,11 +24,11 @@
 10 CONSTANT NL
 9 CONSTANT TB
 32 CONSTANT BL
+8 CONSTANT BKSP
+27 CONSTANT ESC
 : CR NL EMIT ;
 : TAB TB EMIT ;
 : SPACE	BL EMIT ;
-
-24 CONSTANT ROWS
 
 : SPACES
 	BEGIN
@@ -125,6 +125,60 @@
 
 : . 0 .R SPACE ;
 : U. U. [ HIDE U. ] SPACE ;
+
+
+HEX
+: B.
+	BASE @ SWAP
+	BINARY
+
+	8000		( num mask )
+	BEGIN
+		2DUP	( num mask num mask )
+		AND		( num mask masked )
+		IF 1 0 U.0 ELSE 0 0 U.0 THEN
+		1 RSHIFT
+		DUP 0=
+	UNTIL
+	2DROP
+
+	SPACE
+	BASE !
+;
+
+: H.
+	BASE @ SWAP		( base num )
+	HEX
+	
+	DUP 0< IF
+		F			( num mask )
+		BEGIN
+			2DUP		( num mask num mask )
+			AND			( num mask masked )
+			-ROT		( masked num mask )
+			4 LSHIFT	( masked num newmask )
+			DUP 0=
+		UNTIL
+		2DROP
+		
+		C 8 4 0
+		>R >R >R >R
+		
+		( m_0 m_1 m_2 m_3 )
+		BEGIN
+			R> TUCK		( n m n )
+			RSHIFT		( n out )
+			0 U.0
+			0=
+		UNTIL
+		SPACE
+	ELSE
+		4 U.0 SPACE
+	THEN
+	BASE !
+;
+DECIMAL
+
 : ? @ . ;
 
 : .S
@@ -138,6 +192,8 @@
 	REPEAT
 	2DROP
 ;
+
+24 CONSTANT ROWS
 
 : PAGE
 	ROWS 1 DO
@@ -222,7 +278,7 @@
 
 : ABORT
 	S0 DSP!
-	QUITPTR @ EXECUTE
+	QP @ EXECUTE
 ;
 
 : ABORT" IMMEDIATE
@@ -233,40 +289,6 @@
 	POSTPONE ABORT
 	POSTPONE THEN
 ;
-
-HEX
-: H.
-	BASE @ SWAP		( base num )
-	HEX
-	
-	DUP 0< IF
-		F			( num mask )
-		BEGIN
-			2DUP		( num mask num mask )
-			AND			( num mask masked )
-			-ROT		( masked num mask )
-			4 LSHIFT	( masked num newmask )
-			DUP 0=
-		UNTIL
-		2DROP
-		
-		C 8 4 0
-		>R >R >R >R
-		
-		( m_0 m_1 m_2 m_3 )
-		BEGIN
-			R> TUCK		( n m n )
-			RSHIFT		( n out )
-			0 U.0
-			0=
-		UNTIL
-		SPACE
-	ELSE
-		4 U.0 SPACE
-	THEN
-	BASE !
-;
-DECIMAL
 
 : LOCATE
 	WORD FIND
