@@ -1,3 +1,5 @@
+: WORD 32 PARSE ;
+
 #include Forth\compiler_base.forth
 #include Forth\stackops.forth
 #include Forth\control.forth
@@ -9,11 +11,10 @@
 #include Forth\arrays.forth
 #include Forth\interpreter.forth
 
-: WORD
-	BL PARSE
-;
-
 FALSE KEYECHO !
 
-HIDE LOAD
+HIDE QP
+HIDE PARSE_ERROR
+HIDE KEYECHO
+
 WELCOME

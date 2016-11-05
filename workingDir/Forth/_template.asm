@@ -10,7 +10,7 @@ RESET					LD			R5,RET_STACK_ADDRESS
 RET_STACK_ADDRESS		.FILL		RETURN_STACK
 DATA_STACK_ADDRESS		.FILL		DATA_STACK
 
-COLD_START				.FILL		var_QUITPTR
+COLD_START				.FILL		var_QP
 						
 DOCOL					JSR			PUSHRSP_R6
 						ADD			R3,R3,#1				; DOCOL is called at codeword in definition, so increment R3 to reach next location
