@@ -2,11 +2,11 @@
 						
 RESET					LD			R5,RET_STACK_ADDRESS
 						LD			R4,DATA_STACK_ADDRESS
-												
+						
 						LD			R6,COLD_START			; R6 holds the address to the next address (%esi equivalent, IP)
 						
 						JSR			NEXT
-
+						
 RET_STACK_ADDRESS		.FILL		RETURN_STACK
 DATA_STACK_ADDRESS		.FILL		DATA_STACK
 
