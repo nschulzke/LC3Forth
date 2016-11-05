@@ -1,3 +1,57 @@
+: LOCATE
+	WORD FIND
+	H. SPACE
+;
+
+( addr len -- )
+: DUMP
+	BEGIN
+		?DUP		\ while len > 0 )
+	WHILE
+		CR
+		
+		OVER H.		\ print address padded to 4
+		TAB TAB
+		
+		( hex values, 8 per line )
+		2DUP			( addr len addr len )
+		1- 7 AND 1+		( addr len addr linelen )
+		BEGIN
+			?DUP		\ as long as linelen > 0
+		WHILE
+			SWAP		( addr len linelen addr )
+			DUP @		( addr len linelen addr data )
+			H. SPACE	\ print the data
+			1+ SWAP 1-	( addr len linelen addr -- addr len addr+1 linelen-1 )
+		REPEAT
+		DROP			( addr len )
+		
+		TAB TAB
+		( ASCII equivalents )
+		2DUP			( addr len addr len )
+		1- 7 AND 1+		( addr len addr linelen )
+		BEGIN
+			?DUP
+		WHILE
+			SWAP		( addr len linelen addr )
+			DUP @		( addr len linelen addr data )
+			DUP 32 128 WITHIN IF		( 32 <= char < 128? )
+				EMIT
+			ELSE
+				DROP [CHAR] . EMIT
+			THEN
+			1+ SWAP 1-	( addr len linelen addr -- addr len addr+1 linelen-1 )
+		REPEAT
+		DROP			( addr len )
+		
+		DUP 1- 7 AND 1+		( addr len linelen )
+		TUCK				( addr linelen len linelen )
+		-					( addr linelen len-linelen )
+		-ROT +				( len-linelen addr+linelen )
+		SWAP				( addr+linelen len-linelen )
+	REPEAT		\ And now we're ready to loop back
+;
+
 : FORGET
 	WORD FIND			\ find the word
 	?DUP 0= ABORT" Couldn't find word"
