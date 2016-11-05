@@ -99,6 +99,35 @@ INPUT_eof				AND			R1,R1,#0			( set BIN back to 0 if eof )
 INPUT_CB				.BLKW		1
 key_SPACE				.FILL		#32
 }
+#primitive REFILL REFILL
+{
+						JSR			_REFILL
+						JSR			PUSH_R1
+						JSR			NEXT
+						
+_REFILL					ST			R7,REFILL_CB
+						
+						LD			R1,var_BIN
+						BRz			_REFILL_loop
+						AND			R1,R1,#0
+						RET
+						
+_REFILL_loop			JSR			_KEY
+						STR			R0,R1,#0
+						ADD			R1,R1,#1
+						LD			R2,key_NL
+						ADD			R2,R2,R0
+						BRz			_REFILL_nl		( 8 <= c <= 10 is good )
+						OUT
+						BRnzp		_REFILL_loop
+_REFILL_nl				LD			R0,key_SPACE
+						OUT
+						
+						LD			R7,REFILL_CB
+						RET
+						
+REFILL_CB				.BLKW		1
+}
 #primitive PARSE PARSE
 {
 						JSR			POP_R2				( delimiter )
@@ -109,7 +138,7 @@ key_SPACE				.FILL		#32
 						JSR			NEXT
 						
 _PARSE					AND			R1,R1,#0			( length counter )
-
+						
 _PARSE_loop				LDR			R0,R3,#0			( char to be parsed )
 						ADD			R3,R3,#1			( increment pointer )
 						NOT			R0,R0
@@ -117,8 +146,12 @@ _PARSE_loop				LDR			R0,R3,#0			( char to be parsed )
 						ADD			R0,R0,R2			( compare to delimiter )
 						BRz			_PARSE_done
 						ADD			R1,R1,#1			( add one char if not done )
-						BRnzp		_PARSE_loop
-
+						
+						LD			R2,var_KEYECHO
+						BRz			_PARSE_noecho
+						OUT	( This OUT is only called when we're reading from a file. )
+_PARSE_noecho			BRnzp		_PARSE_loop
+						
 _PARSE_done				LD			R0,var_BIN			( return value for start )
 						ST			R3,var_BIN			( update >IN )
 						RET

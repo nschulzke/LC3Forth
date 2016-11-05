@@ -16,10 +16,6 @@
 	10 PARSE DROP DROP
 ;
 
-: LOAD
-	FILELOC >IN !
-;
-
 : :
 	HEADER
 	DOCOL ,
@@ -51,19 +47,20 @@
 	SWAP !		( lenNew lenAddr )
 ;
 
-: QUIT
-	10 EMIT
-	R0 RSP!
-	INTERPRET
-	BRANCH
-	<#-2>
-;
+( address -- immediate_flag : 0 if not set, not 0 if set )
+: ?HIDDEN 1+ @ F_HIDDEN AND ;
 
 ( address -- immediate_flag : 0 if not set, not 0 if set )
 : ?IMMEDIATE 1+ @ F_IMMED AND ;
 
-( address -- immediate_flag : 0 if not set, not 0 if set )
-: ?HIDDEN 1+ @ F_HIDDEN AND ;
+: QUIT
+	10 EMIT
+	R0 RSP!
+	FILELOC >IN !
+	INTERPRET
+	BRANCH
+	<#-2>
+;
 
 : INTERPRET
 	WORD
