@@ -109,12 +109,17 @@ key_SPACE				.FILL		#32
 						JSR			NEXT
 						
 _PARSE					AND			R1,R1,#0			( length counter )
+						NOT			R2,R2
+						ADD			R2,R2,#1			( negate delim )
+						ST			R2,_PARSE_delim
 						
 _PARSE_loop				LDR			R0,R3,#0			( char to be parsed )
 						ADD			R3,R3,#1			( increment pointer )
-						NOT			R0,R0
-						ADD			R0,R0,#1			( negate char )
-						ADD			R0,R0,R2			( compare to delimiter )
+						LD			R2,_PARSE_delim
+						ADD			R2,R2,R0			( compare to delimiter )
+						BRz			_PARSE_done
+						LD			R2,key_NL			( get the newline )
+						ADD			R2,R2,R0			( compare to delimiter )
 						BRz			_PARSE_done
 						ADD			R1,R1,#1			( add one char if not done )
 _PARSE_noecho			BRnzp		_PARSE_loop
@@ -122,6 +127,8 @@ _PARSE_noecho			BRnzp		_PARSE_loop
 _PARSE_done				LD			R0,var_BIN			( return value for start )
 						ST			R3,var_BIN			( update >IN )
 						RET
+						
+_PARSE_delim			.BLKW		1
 }
 #variable KEYECHO KEYECHO <#1>
 #variable >IN BIN <#0>
