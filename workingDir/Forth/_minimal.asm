@@ -53,7 +53,7 @@
 ( address -- immediate_flag : 0 if not set, not 0 if set )
 : ?IMMEDIATE 1+ @ F_IMMED AND ;
 
-: QUIT
+: BOOT
 	10 EMIT
 	R0 RSP!
 	FILELOC >IN !

@@ -102,7 +102,6 @@ HIDE QUIT
 				DROP					( addr len )
 				STATE @ IF
 					FALSE STATE !		\ No longer compiling
-					LATEST @ (FORGET)	\ Erase the word
 				THEN
 				ERROR" Unknown word: " 	\ if there was an error, abort
 				ABORT

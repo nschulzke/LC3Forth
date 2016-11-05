@@ -9,6 +9,10 @@
 #include Forth\arrays.forth
 #include Forth\interpreter.forth
 
+: WORD
+	BL PARSE
+;
+
 FALSE KEYECHO !
 
 HIDE LOAD
