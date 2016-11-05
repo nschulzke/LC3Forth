@@ -143,14 +143,14 @@ HIDE QUIT
 
 : WELCOME
 	PAGE
-	." 	Welcome to version " VERSION . ." of LC3-FORTH!
-	This FORTH was built as a class project by
-	Nathan Schulzke for CS 2810. It functions as a
-	complete operating system for the LC-3.
-	
-	Type WORDS to get a list of available commands.
-	
-	Enjoy!"
+	." Welcome to version " VERSION . ." of LC3-FORTH!" CR
+	." This FORTH was built as a class project by" CR
+	." Nathan Schulzke for CS 2810. It functions as a" CR
+	." complete operating system for the LC-3." CR
+	CR
+	." Type WORDS to get a list of available commands." CR
+	CR
+	." Enjoy!"
 	CR
 	QUIT
 ;
