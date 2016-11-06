@@ -6,11 +6,11 @@
 ( addr len -- )
 : DUMP
 	BEGIN
-		?DUP		\ while len > 0 )
+		?DUP			\ while len > 0 )
 	WHILE
 		CR
 		
-		OVER H.		\ print address padded to 4
+		OVER H.			\ print address padded to 4
 		TAB TAB
 		
 		( hex values, 8 per line )
@@ -26,7 +26,7 @@
 		REPEAT
 		DROP			( addr len )
 		
-		TAB TAB
+		TAB 3 SPACES
 		( ASCII equivalents )
 		2DUP			( addr len addr len )
 		1- 7 AND 1+		( addr len addr linelen )
