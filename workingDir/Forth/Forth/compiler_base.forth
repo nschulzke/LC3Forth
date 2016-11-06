@@ -35,6 +35,7 @@
 	[COMPILE] [']	\ later calls run ['] to get xt and store as LITERAL
 	['] , ,			\ puts xt of , on stack and compiles it into the word
 ;
+
 \ Does [COMPILE] for IMMEDIATE words, COMPILE otherwise
 : POSTPONE IMMEDIATE
 	WORD FIND					( addr )

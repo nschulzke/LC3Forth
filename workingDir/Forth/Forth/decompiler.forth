@@ -61,7 +61,7 @@
 
 : BOUNDS
 	WORD FIND		\ Get the word
-
+	
 	?DUP 0= ABORT" Unknown word! "
 	
 	HERE			( word last ) \ last word
@@ -88,7 +88,7 @@
 	REPEAT
 ;
 
-: (SEE)
+: .seeword
 	CASE
 		['] LIT OF
 			1+
@@ -96,11 +96,11 @@
 		ENDOF
 		['] LIT_XT OF
 			." ['] "
-			1+					
+			1+
 			DUP @ CFA> ID. SPACE
 		ENDOF
 		['] LITSTRING OF
-			[CHAR] S EMIT '"' EMIT SPACE \ print 'S" '
+			[CHAR] S EMIT '"' EMIT SPACE	\ print 'S" '
 			1+ DUP @		( end lenAddr len )
 			SWAP 1+ SWAP	( end addr len )
 			2DUP TELL		\ print the string
@@ -151,11 +151,7 @@
 	ENDCASE
 ;
 
-: SEE
-	BOUNDS
-	
-	CR
-	
+: .notcolon
 	2DUP
 	= IF
 		>CFA @
@@ -169,8 +165,14 @@
 			>CFA @ H.
 		THEN
 		EXIT
-	THEN		
+	THEN
+;
+
+: SEE
+	BOUNDS
+	CR
 	
+	.notcolon
 	SWAP		( end-of-word start-of-word )
 	
 	\ start with ": NAME [IMMEDIATE] "
@@ -182,9 +184,13 @@
 		2DUP >		\ as long as we haven't hit end
 	WHILE
 		DUP @		( end start word )
-		(SEE)
+		.seeword
 		1+			( end start+1 )
 	REPEAT
 	';' EMIT SPACE
+	
 	2DROP
 ;
+
+HIDE .notcolon
+HIDE .seeword
