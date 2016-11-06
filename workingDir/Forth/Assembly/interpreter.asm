@@ -269,8 +269,7 @@ FIND_base				.BLKW		1
 						JSR			PUSH_R0
 						JSR			NEXT
 						
-_TCFA					AND			R1,R1,#0
-						ADD			R0,R0,#1			( skip link pointer )
+_TCFA					ADD			R0,R0,#1			( skip link pointer )
 						LDR			R1,R0,#0			( load flags + len )
 						LD			R2,F_LENMASK		( load lenmask )
 						AND			R1,R1,R2			( mask length )
@@ -281,7 +280,15 @@ _TCFA					AND			R1,R1,#0
 #primitive >DFA TDFA
 {
 						JSR			POP_R0
-						JSR			_TCFA
+_TDFA					JSR			_TCFA
+						ADD			R0,R0,#1
+						JSR			PUSH_R0
+						JSR			NEXT
+}
+#primitive >DATA TDATA
+{
+						JSR			POP_R0
+_TDFA					JSR			_TDFA
 						ADD			R0,R0,#1
 						JSR			PUSH_R0
 						JSR			NEXT

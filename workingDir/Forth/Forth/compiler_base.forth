@@ -9,9 +9,13 @@
 	,
 ;
 
+: DEFINED
+	WORD FIND
+;
+
 \ Gets xt for word, pushes to stack
 : '
-	WORD FIND
+	DEFINED
 	>CFA
 ;
 
@@ -47,8 +51,6 @@
 		COMPILE ,
 ;
 
-: >DFA >CFA 1+ ;
-
 : RECURSE IMMEDIATE
 	LATEST @
 	>CFA ,
@@ -81,7 +83,7 @@
 	DP +!			\ ( adds n to here, old here is still on stack )
 ;
 
-: HIDE WORD FIND HIDDEN ;
+: HIDE DEFINED HIDDEN ;
 
 ( wordptr -- length )
 : LENGTH

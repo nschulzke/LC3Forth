@@ -1,6 +1,5 @@
 : LOCATE
-	WORD FIND
-	H.
+	DEFINED H.
 ;
 
 ( addr len -- )
@@ -53,14 +52,14 @@
 ;
 
 : FORGET
-	WORD FIND			\ find the word
+	DEFINED			\ find the word
 	?DUP 0= ABORT" Couldn't find word"
 	DUP @ LATEST !	\ make LATEST point to the word above it
 	DP !			\ and move our current data up to that point
 ;
 
 : BOUNDS
-	WORD FIND		\ Get the word
+	DEFINED			\ Get the word
 	
 	?DUP 0= ABORT" Unknown word! "
 	
