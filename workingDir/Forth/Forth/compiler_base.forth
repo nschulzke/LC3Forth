@@ -75,19 +75,6 @@
 	!				\ Store my caller in the DFA entry
 ;
 
-: CONSTANT
-	CREATE
-	,
-	DOES>
-	@
-;
-
-: VARIABLE
-	CREATE
-	0 ,
-	DOES>
-;
-
 \ Reserves memory locations after HERE
 : ALLOT
 	DP +!			\ ( adds n to here, old here is still on stack )

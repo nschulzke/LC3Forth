@@ -1,6 +1,6 @@
 : LOCATE
 	WORD FIND
-	H. SPACE
+	H.
 ;
 
 ( addr len -- )

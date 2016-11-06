@@ -116,3 +116,8 @@ _PARSE_delim			.BLKW		1
 						PUTS					( We're going to trust in null-terminator )
 						JSR			NEXT
 }
+#primitive BYE BYE
+{
+						HALT
+						JSR			NEXT
+}

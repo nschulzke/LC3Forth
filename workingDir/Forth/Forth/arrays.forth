@@ -1,3 +1,10 @@
+( size index -- flag )
+: ?INDEX
+	TUCK >		( index flag )
+	SWAP 0>=	( flag flag )
+	AND
+;
+
 ( -- start size )
 : ARRAY
 	CREATE
@@ -18,13 +25,6 @@
 	LOOP
 	DROP
 	." ] "
-;
-
-( size index -- flag )
-: ?INDEX
-	TUCK >		( index flag )
-	SWAP 0>=	( flag flag )
-	AND
 ;
 
 ( addr size val index -- )

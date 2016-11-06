@@ -82,13 +82,13 @@
 			<#3>				( skip to the next branch )
 				>CFA ,			( compile if: in compile mode & not F_IMMED )
 	BRANCH
-	<#26>					( skip if we found the entry, this is ELSE block )
+	<#25>					( skip if we found the entry, this is ELSE block )
 		DROP				( we don't care about the extra 0 on the stack for the address )
 		NUMBER				( addr len -- num err )
 		0BRANCH				( if err == 0, we found a number! )
-		<#14>
-			DROP PARSE_ERROR EMITS  ( Not a number, emit a parse error and drop the number )
-			>IN @
+		<#13>
+			DROP PARSE_ERROR EMITS	( Not a number, emit a parse error and drop the number )
+			BYE
 			0BRANCH
 			<#5>
 				0 >IN !

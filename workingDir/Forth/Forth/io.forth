@@ -126,7 +126,6 @@
 : . 0 .R SPACE ;
 : U. U. [ HIDE U. ] SPACE ;
 
-
 HEX
 : B.
 	BASE @ SWAP
@@ -219,23 +218,6 @@ DECIMAL
 		@			\ jump to previous word
 	REPEAT
 	DROP
-;
-
-( cfa -- addr )
-: CFA>
-	LATEST @		\ start here
-	BEGIN
-		?DUP		\ as long as the link pointer isn't 0
-	WHILE
-		2DUP SWAP	( cfa curr curr cfa )
-		< IF		( curr cfa -- ) \ have we reached it?
-			NIP		( cfa curr -- curr )
-			EXIT
-		THEN
-		@			( back up )
-	REPEAT
-	DROP			( cfa curr -- cfa )
-	0				( cfa -- cfa 0 )
 ;
 
 ( addr len -- )
