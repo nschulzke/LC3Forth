@@ -112,9 +112,9 @@ WORD_buffbot			.FILL		WORD_BUFFER
 						JSR			PUSH_R2			( Number )
 						JSR			PUSH_R0			( Error check [0 = good] )
 						JSR			NEXT
-
+						
 _NUMBER					ST			R7,NUMBER_CB
-
+						
 						AND			R2,R2,#0
 						ST			R2,NUMBER_retval
 						AND			R0,R0,R0
@@ -166,7 +166,7 @@ _NUMBER_process			LD			R3,CHAR_zero
 _NUMBER_save			LD			R2,var_BASE
 						NOT			R2,R2
 						ADD			R2,R2,#1		( invert BASE -- we want to check to see if digit is in range )
-						ADD			R2,R2,R3		( subtract BASE from digit -- negative if in range, zero if equal [bad -- no 10 digit in base-10] )
+						ADD			R2,R2,R3		( subtract BASE from digit -- negative if in range, zero if equal )
 						BRzp		_NUMBER_cleanup	( if it wasn't in range, we're done )
 						
 						( if it was in range, let's add it to NUMBER_retval )
