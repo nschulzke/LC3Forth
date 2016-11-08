@@ -157,12 +157,13 @@
 		DODAT = IF
 			DUP >DFA @ CFA> ID.
 			DUP SPACE ID. ."  = "
-			DUP >DFA 1+ @ .
+			DUP >BODY @ .
 		ELSE
 			." CODE "
 			DUP ID.	SPACE
 			>CFA @ H.
 		THEN
+		RDROP
 		EXIT
 	THEN
 ;

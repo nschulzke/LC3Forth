@@ -285,10 +285,10 @@ _TDFA					JSR			_TCFA
 						JSR			PUSH_R0
 						JSR			NEXT
 }
-#primitive >DATA TDATA
+#primitive >BODY TBODY
 {
 						JSR			POP_R0
-_TDFA					JSR			_TDFA
+_TBODY					JSR			_TDFA
 						ADD			R0,R0,#1
 						JSR			PUSH_R0
 						JSR			NEXT
