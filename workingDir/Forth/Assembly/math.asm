@@ -160,7 +160,7 @@ _EQUALITY_finish		JSR			PUSH_R0
 #primitive + ADDF
 {
 						JSR			POP_R0
-						LDR			R1,R4,#0
+_ADDF					LDR			R1,R4,#0
 						ADD			R0,R0,R1
 						STR			R0,R4,#0
 						JSR			NEXT
@@ -170,10 +170,7 @@ _EQUALITY_finish		JSR			PUSH_R0
 						JSR			POP_R0
 						NOT			R0,R0
 						ADD			R0,R0,#1
-						LDR			R1,R4,#0
-						ADD			R0,R0,R1
-						STR			R0,R4,#0
-						JSR			NEXT
+						JSR			_ADDF
 }
 #primitive * MULT
 {
@@ -184,24 +181,19 @@ _EQUALITY_finish		JSR			PUSH_R0
 						JSR		NEXT
 
 _MULTIPLY				ST		R7,MULT_CB
-
-						AND		R0,R0,#0				( Initialize our scratch )
 		
 						JSR		SIGN_LOGIC
 						ST		R3,MULT_SIGN
 
-						NOT		R3,R1					( Check R1 )
-						NOT		R3,R3
+						AND		R1,R1,R1
 						BRz		MULT_ZERO				( Return 0 if 0 )
-						NOT		R3,R2					( Check R2 )
-						NOT		R3,R3
+						AND		R2,R2,R2
 						BRz		MULT_ZERO				( Return 0 if 0 )
 						
 						AND		R3,R3,#0				( Initialize our return register )
 
-						ADD		R0,R0,R1				( Set R0 to equal R1, this will be our counter )
 MULT_LOOP				ADD		R3,R3,R2				( Add to return value )
-						ADD		R0,R0,#-1				( Decrement counter )
+						ADD		R1,R1,#-1				( Decrement counter )
 						BRp		MULT_LOOP				( Loop back until zero )
 
 						LD		R0,MULT_SIGN
@@ -227,7 +219,7 @@ MULT_SIGN				.BLKW	1
 					JSR		PUSH_R0
 					JSR		NEXT
 					
-_DIVIDE				ST		R7,DIV_R7
+_DIVIDE				ST		R7,DIV_CB
 
 					AND		R2,R2,R2				( Check denominator )
 					BRz		DIV_ZERO_ERROR			( Error if zero )
@@ -259,7 +251,7 @@ DIV_RETURN			LD		R3,DIV_SIGN				( Load the sign into R3 to check )
 					NOT		R0,R0
 					ADD		R0,R0,#1				( If the sign is negative, make the result negative )
 					
-DIV_CLEANUP			LD		R7,DIV_R7
+DIV_CLEANUP			LD		R7,DIV_CB
 					RET
 
 DIV_ZERO_RETURN		AND		R0,R0,#0
@@ -271,13 +263,10 @@ DIV_ZERO_ERROR		LEA		R0,DIV_ZERO_ERR_MSG
 					JSR		RESET
 DIV_ZERO_ERR_MSG	.STRINGZ "\nDivide by zero error! "
 
-DIV_R0			.BLKW	1
-DIV_R1			.BLKW	1
-DIV_R2			.BLKW	1
-DIV_R7			.BLKW	1
+DIV_CB			.BLKW	1
 DIV_SIGN		.BLKW	1
 
-SIGN_LOGIC			ST		R7,SIGN_CALLBACK
+SIGN_LOGIC			ST		R7,SIGN_CB
 
 					AND		R3,R3,#0
 					ADD		R3,R3,#1				( Start with 1 in the sign value )
@@ -294,12 +283,12 @@ SIGN_TEST_R2		AND		R2,R2,R2
 					NOT		R2,R2
 					ADD		R2,R2,#1				( And make R2 positive )
 
-SIGN_CLEANUP		LD		R7,SIGN_CALLBACK
+SIGN_CLEANUP		LD		R7,SIGN_CB
 					RET
 					
 SIGN_FLIP			NOT		R3,R3
 					ADD		R3,R3,#1				( Invert the sign bit and return )
 					RET
 
-SIGN_CALLBACK		.BLKW	1
+SIGN_CB				.BLKW	1
 }

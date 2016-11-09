@@ -61,11 +61,9 @@ _WORD_search			JSR			_INPUT
 						
 _WORD_cleanup			LD			R2,WORD_buffbot
 						LD			R1,WORD_buffptr
-						NOT			R2,R2
-						ADD			R2,R2,#1
-						ADD			R1,R1,R2
-						NOT			R2,R2
-						ADD			R2,R2,#1
+						NOT			R3,R2
+						ADD			R3,R3,#1
+						ADD			R1,R1,R3
 						LD			R7,WORD_CB
 						RET
 						
@@ -80,14 +78,6 @@ _WORD_check_white		LD			R1,c_TAB
 						LD			R1,c_NEW_LINE
 						ADD			R2,R1,R0	( Check if equal )
 						BRz			_WORD_check_white_l
-						
-						LD			R1,c_ESC
-						ADD			R2,R1,R0	( Check if equal )
-						BRz			_WORD_start
-						
-						LD			R1,c_BACKSPACE
-						ADD			R2,R1,R0	( Check if equal )
-						BRz			_WORD_start
 
 						RET
 						
@@ -97,8 +87,6 @@ c_BACKSLASH				.FILL		#-92
 c_TAB					.FILL		#-9
 c_NEW_LINE				.FILL		#-10
 c_SPACE					.FILL		#-32
-c_BACKSPACE				.FILL		#-8
-c_ESC					.FILL		#-27
 
 WORD_CB					.BLKW		1
 WORD_buffptr			.FILL		WORD_BUFFER
@@ -124,8 +112,6 @@ _NUMBER					ST			R7,NUMBER_CB
 						ADD			R1,R1,#1		( increment char pointer )
 						
 						LD			R3,CHAR_neg_sign
-						NOT			R3,R3
-						ADD			R3,R3,#1
 						ADD			R3,R3,R2		( subtract neg_sign from char )
 						ST			R3,NUMBER_sign	( store the sign -- <> 0 means not neg )
 						BRp			_NUMBER_process
@@ -152,8 +138,6 @@ _NUMBER_mult			ADD			R0,R0,R2		( add again )
 						( at this point, R2 holds the character, R0 holds the loop iterator, R1 holds the data pointer )
 						( when finished with _NUMBER_process, R3 will hold the value of the digit )
 _NUMBER_process			LD			R3,CHAR_zero
-						NOT			R3,R3
-						ADD			R3,R3,#1		( negate 0 so we can subtract by it )
 						ADD			R3,R3,R2		( subtracted, so now we can check digits )
 						BRn			_NUMBER_cleanup ( ASCII < 0 means not valid digits )
 						ADD			R2,R3,#-10		( ASCII <= 9 means we can save it )
@@ -191,8 +175,8 @@ NUMBER_CB				.BLKW		1
 NUMBER_retval			.BLKW		1
 NUMBER_sign				.FILL		#0		( <> 0 means not neg )
 NUMBER_length			.BLKW		1
-CHAR_zero				.FILL		#48		( 0 )
-CHAR_neg_sign			.FILL		#45
+CHAR_zero				.FILL		#-48		( 0 )
+CHAR_neg_sign			.FILL		#-45
 CHAR_subA				.FILL		#-17		( 'A' - '0', used to turn A into 0, B into 1, etc )
 }
 #primitive FIND FIND
@@ -288,8 +272,8 @@ _TDFA					JSR			_TCFA
 #primitive >BODY TBODY
 {
 						JSR			POP_R0
-_TBODY					JSR			_TDFA
-						ADD			R0,R0,#1
+_TBODY					JSR			_TCFA
+						ADD			R0,R0,#2
 						JSR			PUSH_R0
 						JSR			NEXT
 }
@@ -373,7 +357,7 @@ _COMMA					LD			R1,var_DP
 #primitive ] RBRAC
 {
 						AND			R0,R0,#0
-						ADD			R0,R0,#1
+						ADD			R0,R0,#-1
 						ST			R0,var_STATE
 						JSR			NEXT
 }

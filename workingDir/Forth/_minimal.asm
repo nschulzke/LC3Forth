@@ -54,7 +54,6 @@
 : ?IMMEDIATE 1+ @ F_IMMED AND ;
 
 : BOOT
-	10 EMIT
 	R0 RSP!
 	FILELOC >IN !
 	INTERPRET
@@ -66,7 +65,7 @@
 	WORD
 	OVER OVER					( addr len -- addr len addr len )
 	FIND						( addr len -- wordAddr )
-	DUP							( so we don't lose the address when we branch )
+	?DUP						( so we don't lose the address when we branch )
 	0BRANCH						( If we didn't find the word, jump )
 	<#21>
 								( if we found it, we now have the address on the stack )
@@ -82,16 +81,12 @@
 			<#3>				( skip to the next branch )
 				>CFA ,			( compile if: in compile mode & not F_IMMED )
 	BRANCH
-	<#25>					( skip if we found the entry, this is ELSE block )
-		DROP				( we don't care about the extra 0 on the stack for the address )
+	<#21>					( skip if we found the entry, this is ELSE block )
 		NUMBER				( addr len -- num err )
 		0BRANCH				( if err == 0, we found a number! )
-		<#13>
+		<#10>
 			DROP PARSE_ERROR EMITS	( Not a number, emit a parse error and drop the number )
-			BYE
-			0BRANCH
-			<#5>
-				0 >IN !
+			0 >IN !
 		BRANCH
 		<#9>
 			STATE @

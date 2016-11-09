@@ -55,6 +55,7 @@ KEY_R2					.BLKW		1
 						
 _INPUT					ST			R7,INPUT_CB
 						LD			R1,var_BIN
+						BRz			_KEY
 						LDR			R0,R1,#0
 
 						LD			R2,var_KEYECHO
@@ -68,7 +69,6 @@ INPUT_cleanup			LD			R7,INPUT_CB
 						RET
 
 INPUT_CB				.BLKW		1
-key_SPACE				.FILL		#32
 }
 #primitive PARSE PARSE
 {
