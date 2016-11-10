@@ -143,7 +143,7 @@ HIDE BOOT
 	TAB ." Welcome to version " VERSION . ." of LC3-FORTH!" CR
 	TAB ." This FORTH was built as a class project by" CR
 	TAB ." Nathan Schulzke for CS 2810. It functions as a" CR
-	TAB ." complete operating system for the LC-3." CR
+	TAB ." shell interface for the LC-3." CR
 	CR
 	TAB ." Type WORDS to get a list of available commands." CR
 	CR
