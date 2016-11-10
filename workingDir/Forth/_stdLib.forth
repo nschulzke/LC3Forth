@@ -4,7 +4,6 @@
 #include Forth\datatypes.forth
 #include Forth\stackops2.forth
 #include Forth\math.forth
-#include Forth\math2.forth
 #include Forth\io.forth
 #include Forth\decompiler.forth
 #include Forth\interpreter.forth
