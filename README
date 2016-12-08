@@ -1,0 +1,9 @@
+This is the beginning of the documentation for this program.
+
+The Java compiler needs cleaning up, once it worked I focused on what's found in workingDir.
+
+Essentially, the Java program compiles /workingDir/Forth/_minimal.asm into /workingDir/Output/compiled.asm,
+and compiles /workingDir/Forth/_stdLib.forth into /workingDir/Output/_stdLib.obj.
+
+compiled.asm then needs to be loaded into LC3Edit and assembled. Once that's done, first load _stdLib.obj,
+then compiled.obj into the simulator and start.
