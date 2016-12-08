@@ -48,10 +48,10 @@
 ;
 
 ( address -- immediate_flag : 0 if not set, not 0 if set )
-: ?HIDDEN 1+ @ F_HIDDEN AND ;
+: HIDDEN? 1+ @ F_HIDDEN AND ;
 
 ( address -- immediate_flag : 0 if not set, not 0 if set )
-: ?IMMEDIATE 1+ @ F_IMMED AND ;
+: IMMEDIATE? 1+ @ F_IMMED AND ;
 
 : BOOT
 	R0 RSP!
@@ -73,13 +73,13 @@
 		STATE @
 		0BRANCH					( branch if not in compile mode )
 		<#5>					( to EXECUTE, because we aren't compiling anything )
-			DUP ?IMMEDIATE		( dup addr, check if an immediate word )
+			DUP IMMEDIATE?		( dup addr, check if an immediate word )
 			0BRANCH				( branch if not immediate )
-			<#5>				( go to >CFA )
-				>CFA EXECUTE	( execute the address )
+			<#5>				( go to >XT )
+				>XT EXECUTE		( execute the address )
 			BRANCH				( skip compiling if we already executed )
 			<#3>				( skip to the next branch )
-				>CFA ,			( compile if: in compile mode & not F_IMMED )
+				>XT ,			( compile if: in compile mode & not F_IMMED )
 	BRANCH
 	<#21>					( skip if we found the entry, this is ELSE block )
 		NUMBER				( addr len -- num err )
