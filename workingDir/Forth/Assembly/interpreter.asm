@@ -246,14 +246,14 @@ FIND_R5					.BLKW		1
 FIND_R4					.BLKW		1
 FIND_base				.BLKW		1
 }
-#primitive >CFA TCFA
+#primitive >XT TXT
 {
 						JSR			POP_R0
-						JSR			_TCFA
+						JSR			_TXT
 						JSR			PUSH_R0
 						JSR			NEXT
 						
-_TCFA					ADD			R0,R0,#1			( skip link pointer )
+_TXT					ADD			R0,R0,#1			( skip link pointer )
 						LDR			R1,R0,#0			( load flags + len )
 						LD			R2,F_LENMASK		( load lenmask )
 						AND			R1,R1,R2			( mask length )
@@ -261,10 +261,10 @@ _TCFA					ADD			R0,R0,#1			( skip link pointer )
 						ADD			R0,R0,R1			( skip length )
 						RET
 }
-#primitive >DFA TDFA
+#primitive >CODE TCODE
 {
 						JSR			POP_R0
-_TDFA					JSR			_TCFA
+_TCODE					JSR			_TXT
 						ADD			R0,R0,#1
 						JSR			PUSH_R0
 						JSR			NEXT
@@ -272,7 +272,7 @@ _TDFA					JSR			_TCFA
 #primitive >BODY TBODY
 {
 						JSR			POP_R0
-_TBODY					JSR			_TCFA
+_TBODY					JSR			_TXT
 						ADD			R0,R0,#2
 						JSR			PUSH_R0
 						JSR			NEXT
