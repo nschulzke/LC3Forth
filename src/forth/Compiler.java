@@ -53,7 +53,7 @@ public final class Compiler
 						ParseHelper.handleColonDef(ret, it);
 						break;
 					case "(":
-						ParseHelper.ignoreComment(it);
+						ParseHelper.ignoreComment(it, ")");
 						break;
 					case "\n":
 						break;
@@ -71,7 +71,7 @@ public final class Compiler
 						ParseHelper.handleVariable(ret, it);
 						break;
 					default:
-						throw new Exception("Bad directive");
+						throw new ParseException("Bad directive: " + token.getText());
 				}
 			} else if (token.getType() != Token.Type.NEW_LINE)
 				throw new Exception("Expected defining word");
@@ -205,7 +205,7 @@ public final class Compiler
 			}
 		}
 
-		public static void ignoreComment(Iterator<Token> it) throws ParseException
+		public static void ignoreComment(Iterator<Token> it, String closing) throws ParseException
 		{
 			iterate(it);
 			Token token;
@@ -213,7 +213,7 @@ public final class Compiler
 			while (it.hasNext())
 			{
 				token = it.next();
-				if (token.getText().equals(")"))
+				if (token.getText().equals(closing))
 				{
 					foundEnd = true;
 					break;
@@ -238,9 +238,11 @@ public final class Compiler
 			{
 				Token token = it.next();
 				if (token.getText().equals("("))
-					ignoreComment(it);
+					ignoreComment(it, ")");
 				else if (token.getText().equals(closeTag))
 					return tokens;
+				else if (token.getText().equals(";"))
+					ignoreComment(it, "\n");
 				else if ((token.getType() != Token.Type.NEW_LINE) || keepNewLine == true)
 					tokens.add(token);
 			}

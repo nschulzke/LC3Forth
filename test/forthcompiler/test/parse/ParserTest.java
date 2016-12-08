@@ -26,13 +26,13 @@ public class ParserTest
 			System.out.println("File not found!");
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			System.out.println(e.toString());
 		} catch (InvalidAssemblyException e)
 		{
-			e.getMessage();
+			System.out.println(e.toString());
 		} catch (UnknownNameException e)
 		{
-			e.getMessage();
+			System.out.println(e.toString());
 		} catch (Exception e)
 		{
 			e.printStackTrace();

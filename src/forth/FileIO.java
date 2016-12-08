@@ -98,7 +98,8 @@ public class FileIO
 				string = string.replaceAll("^\\([ \t]+.*\\)", "");		// paren comments on own line
 				for (int i = 0; i < string.length(); i++)
 					numChars++;
-				stringsIn.add(string);
+				if (string.length() > 0)
+					stringsIn.add(string);
 			}
 			int numLines = stringsIn.size();
 			int wordSize = 2;

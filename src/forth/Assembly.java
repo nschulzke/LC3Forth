@@ -231,6 +231,8 @@ public final class Assembly
 	{
 		int sizeAndFlags = nameIn.length() + flagsIn;
 		
+		nameIn = nameIn.replace("\\", "\\\\");
+		
 		Collection<String> ret = new ArrayList<String>();
 		ret.add(dataLine(namePrefix + labelIn, namePrefix + priorEntry));
 		ret.add(dataLine("", "#" + sizeAndFlags));
