@@ -135,7 +135,7 @@ HEX
 	BEGIN
 		2DUP	( num mask num mask )
 		AND		( num mask masked )
-		IF 1 0 U.0 ELSE 0 0 U.0 THEN
+		IF [CHAR] 1 EMIT ELSE [CHAR] 0 EMIT THEN
 		1 RSHIFT
 		DUP 0=
 	UNTIL
@@ -145,35 +145,29 @@ HEX
 	BASE !
 ;
 
+( num -- )
 : H.
-	BASE @ SWAP		( base num )
+	BASE @ SWAP
 	HEX
 	
 	DUP 0< IF
-		F			( num mask )
+		000F 0 >R >R	\ Format: mask shift
+		00F0 4 >R >R	\ Highest digit last
+		0F00 8 >R >R	\ Lowest digit first
+		F000 C >R >R	\ We do this because RSHIFT has an overhead
 		BEGIN
-			2DUP		( num mask num mask )
-			AND			( num mask masked )
-			-ROT		( masked num mask )
-			4 LSHIFT	( masked num newmask )
-			DUP 0=
-		UNTIL
-		2DROP
-		
-		C 8 4 0
-		>R >R >R >R
-		
-		( m_0 m_1 m_2 m_3 )
-		BEGIN
-			R> TUCK		( n m n )
-			RSHIFT		( n out )
-			0 U.0
+			DUP			( num num )
+			R> AND		( num masked )
+			R> TUCK		( num shifts masked shifts )
+			RSHIFT		( num shifts digit )
+			0 U.0		( num shifts )
 			0=
 		UNTIL
-		SPACE
+		DROP
 	ELSE
 		4 U.0 SPACE
 	THEN
+	
 	BASE !
 ;
 DECIMAL
@@ -192,7 +186,7 @@ DECIMAL
 	2DROP
 ;
 
-24 CONSTANT ROWS
+25 CONSTANT ROWS
 
 : PAGE
 	ROWS 1 DO
@@ -210,7 +204,7 @@ DECIMAL
 	BEGIN
 		DUP	@		( pointer next )
 	WHILE
-		DUP ?HIDDEN	\ check if hidden
+		DUP HIDDEN?	\ check if hidden
 		NOT IF 		\ if not hidden
 			DUP ID.	\ display name
 			SPACE	\ and tabs to separate

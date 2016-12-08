@@ -4,16 +4,16 @@
 
 \ c a b WITHIN returns true if a <= c < b
 : WITHIN
-	-ROT				( b c a )
+	-ROT			( b c a )
 	OVER			( b c a c )
-	<= IF
-		> IF		( b c -- )
+	< IF
+		>= IF		( b c -- )
 			TRUE
 		ELSE
 			FALSE
 		THEN
 	ELSE
-		DROP DROP	( b c -- )
+		2DROP		( b c -- )
 		FALSE
 	THEN
 ;
@@ -65,8 +65,8 @@ HEX
 			2/
 		THEN
 		
-		SWAP 1-			\ We did it once, get ready to loop
-		0 ?DO
+		SWAP 1-			( num times-1 )
+		0 ?DO			( num )
 			2/
 		LOOP
 	THEN

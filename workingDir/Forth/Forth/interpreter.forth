@@ -7,28 +7,27 @@ VARIABLE KEYBUFFER 127 ALLOT
 
 ( bufferAddr char -- bufferAddr char )
 : HANDLECHAR
-	DUP BKSP = IF
-		SWAP				( char addr )
-		DUP KEYBUFFER >		( char addr addr>keybuffer? )
-		IF					\ if we haven't hit the bottom of the buffer yet
-			171 EMIT		\ Emit <<
-			1 -				( char addr-1 )
-		THEN
-		SWAP				( addr char )
-		EXIT
-	THEN
-	DUP ESC = IF
-		167 EMIT
-		2DROP
-		QP @ EXECUTE
-	THEN
-	DUP NL = IF
-		SPACE				( addr char )
-	ELSE
+	TUCK CASE		( char bufferAddr char )
+		BKSP OF
+			DUP KEYBUFFER >		( char addr addr>keybuffer? )
+			IF					\ if we haven't hit the bottom of the buffer yet
+				171 EMIT		\ Emit <<
+				1-				( char addr-1 )
+			THEN
+			SWAP				( addr char )
+			EXIT				\ Prevents storing of char
+		ENDOF
+		ESC OF
+			167 EMIT			\ Emit ESC char
+			QP @ EXECUTE		\ Restarts at QUIT
+		ENDOF
+		NL OF
+			SPACE				( addr char )
+		ENDOF
 		DUP EMIT
-	THEN
-	2DUP SWAP !		( addr key )
-	SWAP 1+ SWAP 	( addr+1 key )
+	ENDCASE
+	2DUP !		( char addr )
+	1+ SWAP 	( addr+1 char )
 ;
 
 ( addr maxlen )
@@ -38,8 +37,8 @@ VARIABLE KEYBUFFER 127 ALLOT
 	\ We wont use the length: the spec says not to terminate when we reach it anyway...
 	BEGIN
 		KEY				( addr key )
-		HANDLECHAR
-		NL =
+		HANDLECHAR		( addr+1 key )
+		NL =			( addr+1 flag )
 	UNTIL
 	0 SWAP !			\ null terminator
 ;
@@ -73,41 +72,49 @@ HIDE BOOT
 	POSTPONE ABORT
 ;
 
+\ Compiles if in compile mode, otherwise executes
+( wordAddr -- )
+: ?COMPILE
+	DUP IMMEDIATE?				( wordAddr F_IMMED )
+	STATE @	NOT					( wordAddr F_IMMED STATE' )
+	OR IF						\ is it execution mode or IMMED?
+		>XT EXECUTE			\ execute the address
+	ELSE
+		>XT ,					\ compile if: in compile mode & not F_IMMED
+	THEN
+;
+
+( addr len -- num | {ABORTS} )
+: NUMBER?
+	2DUP						( addr len addr len )
+	NUMBER						( addr len num err )
+	IF	\ if err				( addr len num )
+		FALSE STATE !			\ No longer compiling ( if we were )
+		DROP					( addr len )
+		ERROR" Unknown word: " 	\ if there was an error, abort
+	ELSE
+		NIP NIP					( addr len num -- num )
+	THEN
+;
+
 : INTERPRET
 	BEGIN
-		>IN @
-		SKIP_BLANKS
-		DUP >IN !
-		@
+		>IN @			( in )
+		SKIP_BLANKS		( in+blanks )
+		DUP >IN !		\ Store new >IN
+		@				\ Keep going with WHILE until null-terminated
 	WHILE
 		WORD
-		OVER OVER						( addr len addr len )
-		FIND							( addr len wordAddr )
-		?DUP IF							\ If we didn't find the word, jump
-			-ROT 2DROP					( wordAddr )
-			DUP ?IMMEDIATE				( wordAddr F_IMMED )
-			STATE @	NOT					( wordAddr F_IMMED STATE' )
-			OR IF						\ is it execution mode or IMMED?
-				>CFA EXECUTE			\ execute the address
-			ELSE
-				>CFA ,					\ compile if: in compile mode & not F_IMMED
-			THEN
+		2DUP				( addr len addr len )
+		FIND				( addr len wordAddr )
+		?DUP IF				\ If we didn't find the word, jump
+			-ROT 2DROP		( wordAddr )
+			?COMPILE
 		ELSE
-			2DUP						( addr len addr len )
-			NUMBER						( addr len num err )
-			IF	\ if err				( addr len num )
-				DROP					( addr len )
-				STATE @ IF
-					FALSE STATE !		\ No longer compiling
-				THEN
-				ERROR" Unknown word: " 	\ if there was an error, abort
-				ABORT
-			ELSE
-				NIP NIP					( addr len num -- num )
-			THEN
-			STATE @ IF				\ Are we compiling?
-				POSTPONE LIT ,		\ compile lit followed by the number found
-			THEN					\ if we're not compiling, just leave the number on the stack
+			NUMBER?				\ returns num if valid, otherwise aborts
+			STATE @ IF			\ Are we compiling?
+				POSTPONE LIT ,	\ compile lit followed by the number found
+			THEN				\ if we're not compiling, just leave the number on the stack
 		THEN
 	REPEAT
 ;
@@ -123,7 +130,7 @@ HIDE BOOT
 
 : QUIT
 	[ LATEST @
-	>CFA QP ! ]
+	>XT QP ! ]
 	BEGIN
 		PROMPT
 		R0 RSP!
@@ -131,19 +138,19 @@ HIDE BOOT
 		KEYBUFFER >IN !
 		INTERPRET
 		STATE @ 0= IF
-			SPACE ." ok "
+			."  ok "
 		THEN
 	AGAIN
 ;
 
-3 CONSTANT VERSION
+4 CONSTANT VERSION
 
 : WELCOME
 	PAGE
 	TAB ." Welcome to version " VERSION . ." of LC3-FORTH!" CR
-	TAB ." This FORTH was built as a class project by" CR
-	TAB ." Nathan Schulzke for CS 2810. It functions as a" CR
-	TAB ." shell interface for the LC-3." CR
+	TAB ." This FORTH was built as a final project by" CR
+	TAB ." Nathan Schulzke for CS 2810. It functions as" CR
+	TAB ." a shell interface for the LC-3." CR
 	CR
 	TAB ." Type WORDS to get a list of available commands." CR
 	CR

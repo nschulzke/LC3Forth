@@ -5,6 +5,11 @@
 	AND
 ;
 
+( addr len -- end begin )
+: FOREACH
+	OVER + SWAP		( addr+len addr )
+;
+
 ( -- start size )
 : ARRAY
 	CREATE
@@ -15,16 +20,11 @@
 	SWAP @		\ get the number of indices
 ;
 
-( addr u -- )
+( addr len -- )
 : ARRAY.
-	." [ "
-	0 ?DO
-		DUP @
-		. ." , "
-		1+
+	FOREACH ?DO
+		I @ .
 	LOOP
-	DROP
-	." ] "
 ;
 
 ( addr size val index -- )
@@ -46,4 +46,30 @@
 	ELSE
 		ABORT" Index out of bounds!"
 	THEN
+;
+
+( addr1 addr2 -- )
+: SWAP!
+	OVER @ OVER @	( addr1 addr2 mem1 mem2 )
+	-ROT			( addr1 mem2 addr2 mem1 )
+	SWAP !
+	SWAP !
+;
+
+( addr len -- )
+: ARRAY-SORT
+	BEGIN
+		2DUP FALSE -ROT	( addr len flag addr len )
+		FOREACH 1+		( addr len flag end begin )
+		DO	( flag )
+			I 1- @
+			I @		( flag mem[i-1] mem[i] )
+			> DUP IF ( flag flag )
+				I 1- I SWAP!
+			THEN
+			OR
+		LOOP
+	0=
+	UNTIL
+	2DROP
 ;

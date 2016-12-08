@@ -1,5 +1,5 @@
 ( cfa -- addr )
-: CFA>
+: XT>
 	LATEST @		\ start here
 	BEGIN
 		?DUP		\ as long as the link pointer isn't 0
@@ -26,23 +26,4 @@
 	CREATE
 	0 ,
 	DOES>
-;
-
-: VALUE
-	CREATE
-	,
-	DOES>
-	@
-;
-
-: TO
-	DEFINED
-	>DFA
-	DUP @ CFA>		\ Get the type of value
-	LIT_XT VALUE CFA>
-	= IF
-		1+ !
-	ELSE
-		DROP
-	THEN
 ;

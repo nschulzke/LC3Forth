@@ -9,14 +9,14 @@
 	,
 ;
 
-: DEFINED
+: NAME
 	WORD FIND
 ;
 
 \ Gets xt for word, pushes to stack
 : '
-	DEFINED
-	>CFA
+	NAME
+	>XT
 ;
 
 \ Gets a word's xt, compiles it.
@@ -42,9 +42,9 @@
 
 \ Does [COMPILE] for IMMEDIATE words, COMPILE otherwise
 : POSTPONE IMMEDIATE
-	WORD FIND					( addr )
-	DUP >CFA SWAP				( xt addr )
-	?IMMEDIATE 0BRANCH [ 4 , ]	( xt )
+	NAME						( addr )
+	DUP >XT SWAP				( xt addr )
+	IMMEDIATE? 0BRANCH [ 4 , ]	( xt )
 		,
 	BRANCH [ 5 , ]
 		[COMPILE] LITERAL_XT
@@ -53,7 +53,7 @@
 
 : RECURSE IMMEDIATE
 	LATEST @
-	>CFA ,
+	>XT ,
 ;
 
 ( addr -- )
@@ -74,8 +74,8 @@
 
 : DOES>
 	R>				\ Gets my caller ( also guarantees that we don't run what follows )
-	LATEST @ >DFA	\ The last CREATE entry
-	!				\ Store my caller in the DFA entry
+	LATEST @ >CODE	\ The last CREATE entry
+	!				\ Store my caller in the CODE entry
 ;
 
 \ Reserves memory locations after HERE
@@ -83,7 +83,7 @@
 	DP +!			\ ( adds n to here, old here is still on stack )
 ;
 
-: HIDE DEFINED HIDDEN ;
+: HIDE NAME HIDDEN ;
 
 ( wordptr -- length )
 : LENGTH

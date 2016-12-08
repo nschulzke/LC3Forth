@@ -11,7 +11,7 @@
 ( addr -- )
 : >RESOLVE
 	DUP				( addr addr )
-	HERE SWAP -	( addr offset )
+	HERE SWAP -		( addr offset )
 	SWAP !			\ and back-fill it in the original location
 ;
 

@@ -1,5 +1,17 @@
 : LOCATE
-	DEFINED H.
+	NAME H.
+;
+
+( len -- linelen )
+: .linelen
+	8 /MOD			( len%8 len/8 )
+	IF 8 NIP THEN
+;
+
+( start len -- start finish )
+: .loop-setup
+	.linelen		( start linelen )
+	OVER + SWAP		( start finish )
 ;
 
 ( addr len -- )
@@ -12,38 +24,27 @@
 		OVER H.			\ print address padded to 4
 		TAB TAB
 		
-		( hex values, 8 per line )
 		2DUP			( addr len addr len )
-		1- 7 AND 1+		( addr len addr linelen )
-		BEGIN
-			?DUP		\ as long as linelen > 0
-		WHILE
-			SWAP		( addr len linelen addr )
-			DUP @		( addr len linelen addr data )
+		.loop-setup		( addr len start finish )
+		DO				( addr len )
+			I @			( addr len data )
 			H. SPACE	\ print the data
-			1+ SWAP 1-	( addr len linelen addr -- addr len addr+1 linelen-1 )
-		REPEAT
-		DROP			( addr len )
+		LOOP
 		
-		TAB 3 SPACES
+		TAB
 		( ASCII equivalents )
 		2DUP			( addr len addr len )
-		1- 7 AND 1+		( addr len addr linelen )
-		BEGIN
-			?DUP
-		WHILE
-			SWAP		( addr len linelen addr )
-			DUP @		( addr len linelen addr data )
-			DUP 32 128 WITHIN IF		( 32 <= char < 128? )
-				EMIT
+		.loop-setup		( addr len start finish )
+		DO				( addr len )
+			I @			( addr len char )
+			32 128 WITHIN IF	\ 32 <= char < 128?
+				I @ EMIT		\ Emit char
 			ELSE
-				DROP [CHAR] . EMIT
+				[CHAR] . EMIT
 			THEN
-			1+ SWAP 1-	( addr len linelen addr -- addr len addr+1 linelen-1 )
-		REPEAT
-		DROP			( addr len )
+		LOOP
 		
-		DUP 1- 7 AND 1+		( addr len linelen )
+		DUP .linelen		( addr len linelen )
 		TUCK				( addr linelen len linelen )
 		-					( addr linelen len-linelen )
 		-ROT +				( len-linelen addr+linelen )
@@ -51,18 +52,23 @@
 	REPEAT		\ And now we're ready to loop back
 ;
 
+HIDE .linelen
+HIDE .loop-setup
+
 : FORGET
-	DEFINED			\ find the word
+	NAME			\ find the word
 	?DUP 0= ABORT" Couldn't find word"
 	DUP @ LATEST !	\ make LATEST point to the word above it
 	DP !			\ and move our current data up to that point
 ;
 
+( -- end start )
 : BOUNDS
-	DEFINED			\ Get the word
+	NAME			\ Get the word
 	
 	?DUP 0= ABORT" Unknown word! "
 	
+	\ This loop finds the start of this word and of the next
 	HERE			( word last ) \ last word
 	LATEST @		( word last curr )
 	BEGIN
@@ -73,18 +79,19 @@
 		NIP			( word curr )
 		DUP @		( word curr prev )
 	REPEAT
-	
 	DROP			( start-of-word start-of-next )
 	
+	\ This loop finds the EXIT
 	BEGIN
 		2DUP <				\ are we still within range?
-		IF 1 ELSE 0 THEN
-		OVER @ ['] EXIT <>		\ still no sign of EXIT?
-		IF 1 ELSE 0 THEN
-		AND
+		OVER @ ['] EXIT <>	\ still no sign of EXIT?
+		AND					\ iterate if both are true
 	WHILE
-		1-			( start-of-word location-1 )
+		1-	( start-of-word location-1 )
 	REPEAT
+	\ At the end of this loop, if start and end are equal, then there's no EXIT.
+	\ This means it's either a primitive or a CREATE word.
+	SWAP	( end start )
 ;
 
 : .seeword
@@ -96,7 +103,7 @@
 		['] LIT_XT OF
 			." ['] "
 			1+
-			DUP @ CFA> ID. SPACE
+			DUP @ XT> ID. SPACE
 		ENDOF
 		['] LITSTRING OF
 			[CHAR] S EMIT '"' EMIT SPACE	\ print 'S" '
@@ -146,48 +153,46 @@
 		ENDOF
 		\ If it's not a special case above
 		( end start )
-		DUP CFA> ID. SPACE	\ print the word
+		DUP XT> ID. SPACE	\ print the word
 	ENDCASE
 ;
 
 : .notcolon
-	2DUP
-	= IF
-		>CFA @
-		DODAT = IF
-			DUP >DFA @ CFA> ID.
-			DUP SPACE ID. ."  = "
-			DUP >BODY @ .
-		ELSE
-			." CODE "
-			DUP ID.	SPACE
-			>CFA @ H.
-		THEN
-		RDROP
-		EXIT
+	>XT @
+	DODAT = IF
+		DUP >CODE @ XT> ID.
+		DUP SPACE ID. ."  = "
+		DUP >BODY @ .
+	ELSE
+		." CODE "
+		DUP ID.	SPACE
+		>XT @ H.
 	THEN
 ;
 
 : SEE
-	BOUNDS
-	CR
+	BOUNDS			( end-of-word start-of-word )
 	
-	.notcolon
-	SWAP		( end-of-word start-of-word )
+	CR
+	2DUP = IF		\ If start=end, then it's not a colon definition
+		.notcolon	\ handle non-colon word
+		EXIT		\ and leave
+	THEN
 	
 	\ start with ": NAME [IMMEDIATE] "
 	':' EMIT SPACE DUP ID. SPACE
-	DUP ?IMMEDIATE IF ." IMMEDIATE " THEN
+	DUP IMMEDIATE? IF ." IMMEDIATE " THEN
+	CR
 	
-	>DFA			( end start )
+	>CODE			( end start )
 	BEGIN
 		2DUP >		\ as long as we haven't hit end
 	WHILE
 		DUP @		( end start word )
-		.seeword
-		1+			( end start+1 )
+		.seeword	( end start+offset )
+		1+			( end start+offset+1 )
 	REPEAT
-	';' EMIT SPACE
+	CR ';' EMIT SPACE
 	
 	2DROP
 ;
