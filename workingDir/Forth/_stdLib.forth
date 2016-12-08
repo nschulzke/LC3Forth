@@ -5,13 +5,14 @@
 #include Forth\stackops2.forth
 #include Forth\math.forth
 #include Forth\io.forth
+#include Forth\datatypes2.forth
 #include Forth\decompiler.forth
 #include Forth\interpreter.forth
+#include Forth\Extras\arrays.forth
 
 FALSE KEYECHO !
 
 HIDE QP
 HIDE PARSE_ERROR
 HIDE KEYECHO
-
 WELCOME
