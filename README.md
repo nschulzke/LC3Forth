@@ -1,4 +1,4 @@
-LC3Forth is a complete Forth implementation for the LC-3, and an accompanying compiler.
+LC3Forth is a complete Forth implementation for the LC-3, with an accompanying compiler.
   [What is Forth?](https://www.forth.com/starting-forth/0-starting-forth/#Introduction_for_Professionals_Forth_in_the_Real_World)
 
 For the easiest way to take a look at it in action, download LC3Forth.zip and read the README. Alternatively, you can view my short [in-class presentation video here.](https://www.youtube.com/watch?v=alPzVbVq2TU)
