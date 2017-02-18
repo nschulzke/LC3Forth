@@ -9,6 +9,8 @@ My best estimate is that I spent around 300 hours working on this project. That'
 
 I started just writing assembly code, but it was getting really repetitive, and LC-3 Forth's assembler doesn't support macros. So I decided to build a simple compiler to make things easier to work on, then built the Forth system using that tool.
 
+[(You can download the official LC-3 simulator and assembler here)](https://highered.mheducation.com/sites/0072467509/student_view0/lc-3_simulator.html)
+
 # The Java Compiler
 This was my first attempt at anything resembling a compiler, and I knew very little about what would be needed when I started this. I'm sure I did some things wrong, but at least it works! I'm going to come back and tidy it up, right now it's feature complete, but a little bit disorganized (main() is still in a testing file, for example).
 
