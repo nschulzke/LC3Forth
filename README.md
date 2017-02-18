@@ -1,7 +1,7 @@
 LC3Forth is a complete Forth implementation for the LC-3, with an accompanying compiler.
   [What is Forth?](https://www.forth.com/starting-forth/0-starting-forth/#Introduction_for_Professionals_Forth_in_the_Real_World)
 
-For the easiest way to take a look at it in action, download LC3Forth.zip and read the README. Alternatively, you can view my short [in-class presentation video here.](https://www.youtube.com/watch?v=alPzVbVq2TU)
+**For the easiest way to take a look at it in action, download LC3Forth.zip and read the README. Alternatively, you can view my short [in-class presentation video here.](https://www.youtube.com/watch?v=alPzVbVq2TU)**
 
 This was my final project for Computer Architecture at UVU. We were assigned to build something using the LC-3 Assembly language, and I'd been reading a bit about Forth, which was built originally on 16-bit computers like the LC-3. I thought it would be neat to build my own Forth.
 
