@@ -7,7 +7,7 @@ This was my final project for Computer Architecture at UVU. We were assigned to 
 
 My best estimate is that I spent around 300 hours working on this project. That's significantly more than I'd normally spend on a school project, but I had a blast working on it!
 
-I started just writing assembly code, but it was getting really repetitive, and LC-3 Forth's assembler doesn't support macros. So I decided to build a simple compiler to make things easier to work on, then built the Forth system using that tool.
+I started just writing assembly code, but it was getting really repetitive, and the LC-3's assembler doesn't support macros. So I decided to build a simple compiler to make things easier to work on, then built the Forth system using that tool.
 
 [(You can download the official LC-3 simulator and assembler here)](https://highered.mheducation.com/sites/0072467509/student_view0/lc-3_simulator.html)
 
